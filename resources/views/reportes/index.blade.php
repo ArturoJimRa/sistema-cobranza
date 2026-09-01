@@ -4,11 +4,20 @@
 
 @section('content')
 
+{{-- ========================================================= --}}
+{{-- FILTROS --}}
+{{-- ========================================================= --}}
+
 <div class="card">
 
     <div class="card-header">
-        <h3 class="card-title">Filtros de Reporte</h3>
+
+        <h3 class="card-title">
+            Filtros de Reporte
+        </h3>
+
     </div>
+
 
     <form method="GET" action="{{ route('reportes.index') }}">
 
@@ -16,8 +25,12 @@
 
             <div class="row">
 
-                {{-- Fecha inicio --}}
+                {{-- ========================================================= --}}
+                {{-- FECHA INICIO --}}
+                {{-- ========================================================= --}}
+
                 <div class="col-md-3 mb-3">
+
                     <label>Fecha inicio</label>
 
                     <input
@@ -26,10 +39,16 @@
                         class="form-control"
                         value="{{ request('fecha_inicio') }}"
                     >
+
                 </div>
 
-                {{-- Fecha fin --}}
+
+                {{-- ========================================================= --}}
+                {{-- FECHA FIN --}}
+                {{-- ========================================================= --}}
+
                 <div class="col-md-3 mb-3">
+
                     <label>Fecha fin</label>
 
                     <input
@@ -38,15 +57,26 @@
                         class="form-control"
                         value="{{ request('fecha_fin') }}"
                     >
+
                 </div>
 
-                {{-- Tipo --}}
+
+                {{-- ========================================================= --}}
+                {{-- TIPO --}}
+                {{-- ========================================================= --}}
+
                 <div class="col-md-3 mb-3">
+
                     <label>Tipo</label>
 
-                    <select name="naturaleza" class="form-control">
+                    <select
+                        name="naturaleza"
+                        class="form-control"
+                    >
 
-                        <option value="">Todos</option>
+                        <option value="">
+                            Todos
+                        </option>
 
                         <option
                             value="1"
@@ -63,15 +93,26 @@
                         </option>
 
                     </select>
+
                 </div>
 
-                {{-- Estado --}}
+
+                {{-- ========================================================= --}}
+                {{-- ESTADO --}}
+                {{-- ========================================================= --}}
+
                 <div class="col-md-3 mb-3">
+
                     <label>Estado</label>
 
-                    <select name="estado" class="form-control">
+                    <select
+                        name="estado"
+                        class="form-control"
+                    >
 
-                        <option value="">Todos</option>
+                        <option value="">
+                            Todos
+                        </option>
 
                         <option
                             value="1"
@@ -88,15 +129,26 @@
                         </option>
 
                     </select>
+
                 </div>
 
-                {{-- Inmobiliaria --}}
+
+                {{-- ========================================================= --}}
+                {{-- INMOBILIARIA --}}
+                {{-- ========================================================= --}}
+
                 <div class="col-md-4 mb-3">
+
                     <label>Inmobiliaria</label>
 
-                    <select name="inmobiliaria_id" class="form-control">
+                    <select
+                        name="inmobiliaria_id"
+                        class="form-control"
+                    >
 
-                        <option value="">Todas</option>
+                        <option value="">
+                            Todas
+                        </option>
 
                         @foreach($inmobiliarias as $item)
 
@@ -110,15 +162,26 @@
                         @endforeach
 
                     </select>
+
                 </div>
 
-                {{-- Inmueble --}}
+
+                {{-- ========================================================= --}}
+                {{-- INMUEBLE --}}
+                {{-- ========================================================= --}}
+
                 <div class="col-md-4 mb-3">
+
                     <label>Inmueble</label>
 
-                    <select name="inmueble_id" class="form-control">
+                    <select
+                        name="inmueble_id"
+                        class="form-control"
+                    >
 
-                        <option value="">Todos</option>
+                        <option value="">
+                            Todos
+                        </option>
 
                         @foreach($inmuebles as $item)
 
@@ -132,15 +195,26 @@
                         @endforeach
 
                     </select>
+
                 </div>
 
-                {{-- Unidad --}}
+
+                {{-- ========================================================= --}}
+                {{-- UNIDAD / LOCAL --}}
+                {{-- ========================================================= --}}
+
                 <div class="col-md-4 mb-3">
-                    <label>Unidad</label>
 
-                    <select name="unidad_id" class="form-control">
+                    <label>Unidad / Local</label>
 
-                        <option value="">Todas</option>
+                    <select
+                        name="unidad_id"
+                        class="form-control"
+                    >
+
+                        <option value="">
+                            Todos
+                        </option>
 
                         @foreach($unidades as $item)
 
@@ -154,15 +228,64 @@
                         @endforeach
 
                     </select>
+
                 </div>
 
-                {{-- Concepto --}}
+
+                {{-- ========================================================= --}}
+                {{-- CLIENTE --}}
+                {{-- ========================================================= --}}
+
                 <div class="col-md-6 mb-3">
+
+                    <label>Cliente</label>
+
+                    <select
+                        name="cliente_id"
+                        class="form-control"
+                    >
+
+                        <option value="">
+                            Todos los clientes
+                        </option>
+
+                        @foreach($clientes as $cliente)
+
+                            <option
+                                value="{{ $cliente->id }}"
+                                {{ request('cliente_id') == $cliente->id ? 'selected' : '' }}
+                            >
+                                {{ $cliente->nombre }}
+
+                                @if($cliente->razon_social)
+                                    - {{ $cliente->razon_social }}
+                                @endif
+
+                            </option>
+
+                        @endforeach
+
+                    </select>
+
+                </div>
+
+
+                {{-- ========================================================= --}}
+                {{-- CONCEPTO --}}
+                {{-- ========================================================= --}}
+
+                <div class="col-md-6 mb-3">
+
                     <label>Concepto</label>
 
-                    <select name="concepto_id" class="form-control">
+                    <select
+                        name="concepto_id"
+                        class="form-control"
+                    >
 
-                        <option value="">Todos</option>
+                        <option value="">
+                            Todos
+                        </option>
 
                         @foreach($conceptos as $item)
 
@@ -176,15 +299,26 @@
                         @endforeach
 
                     </select>
+
                 </div>
 
-                {{-- Forma de pago --}}
+
+                {{-- ========================================================= --}}
+                {{-- FORMA DE PAGO --}}
+                {{-- ========================================================= --}}
+
                 <div class="col-md-6 mb-3">
+
                     <label>Forma de pago</label>
 
-                    <select name="forma_pago_id" class="form-control">
+                    <select
+                        name="forma_pago_id"
+                        class="form-control"
+                    >
 
-                        <option value="">Todas</option>
+                        <option value="">
+                            Todas
+                        </option>
 
                         @foreach($formasPago as $item)
 
@@ -198,55 +332,88 @@
                         @endforeach
 
                     </select>
+
                 </div>
 
             </div>
 
         </div>
 
+
+        {{-- ========================================================= --}}
+        {{-- BOTONES --}}
+        {{-- ========================================================= --}}
+
         <div class="card-footer">
 
             {{-- Buscar --}}
-            <button type="submit" class="btn btn-primary">
+
+            <button
+                type="submit"
+                class="btn btn-primary"
+            >
+
                 <i class="fas fa-search"></i>
+
                 Buscar
+
             </button>
 
+
             {{-- Limpiar --}}
+
             <a
                 href="{{ route('reportes.index') }}"
                 class="btn btn-secondary"
             >
+
                 <i class="fas fa-eraser"></i>
+
                 Limpiar
+
             </a>
 
+
             {{-- PDF --}}
+
             <a
                 href="{{ route('reportes.pdf', request()->query()) }}"
                 class="btn btn-danger"
             >
+
                 <i class="fas fa-file-pdf"></i>
+
                 PDF
+
             </a>
 
+
             {{-- Excel --}}
+
             <a
                 href="{{ route('reportes.excel', request()->query()) }}"
                 class="btn btn-success"
             >
+
                 <i class="fas fa-file-excel"></i>
+
                 Excel
+
             </a>
 
+
             {{-- Imprimir --}}
+
             <a
                 href="{{ route('reportes.imprimir', request()->query()) }}"
                 target="_blank"
                 class="btn btn-dark"
             >
+
                 <i class="fas fa-print"></i>
+
                 Imprimir
+
             </a>
 
         </div>
@@ -265,10 +432,13 @@
     <div class="card-header">
 
         <h3 class="card-title">
+
             Resultados
+
         </h3>
 
     </div>
+
 
     <div class="card-body table-responsive p-0">
 
@@ -288,7 +458,9 @@
 
                     <th>Inmueble</th>
 
-                    <th>Unidad</th>
+                    <th>Cliente</th>
+
+                    <th>Unidad / Local</th>
 
                     <th>Concepto</th>
 
@@ -304,145 +476,276 @@
 
             </thead>
 
+
             <tbody>
 
-            @forelse($movimientos as $m)
+                @forelse($movimientos as $m)
 
-                <tr class="{{ $m->estado == 2 ? 'table-danger' : '' }}">
+                    <tr class="{{ $m->estado == 2 ? 'table-danger' : '' }}">
 
-                    {{-- Folio --}}
-                    <td>
-                        {{ $m->folio }}
-                    </td>
 
-                    {{-- Fecha --}}
-                    <td>
-                        {{ $m->fecha }}
-                    </td>
+                        {{-- ========================================================= --}}
+                        {{-- FOLIO --}}
+                        {{-- ========================================================= --}}
 
-                    {{-- Tipo --}}
-                    <td>
+                        <td>
 
-                        @if($m->naturaleza == 1)
+                            {{ $m->folio }}
 
-                            <span class="badge badge-success">
-                                Ingreso
-                            </span>
+                        </td>
 
-                        @else
 
-                            <span class="badge badge-warning">
-                                Gasto
-                            </span>
+                        {{-- ========================================================= --}}
+                        {{-- FECHA --}}
+                        {{-- ========================================================= --}}
 
-                        @endif
+                        <td>
 
-                    </td>
+                            {{ \Carbon\Carbon::parse($m->fecha)->format('d/m/Y') }}
 
-                    {{-- Inmobiliaria --}}
-                    <td>
-                        {{ $m->inmobiliaria->nombre ?? '—' }}
-                    </td>
+                        </td>
 
-                    {{-- Inmueble --}}
-                    <td>
-                        {{ $m->inmueble->nombre ?? '—' }}
-                    </td>
 
-                    {{-- Unidad --}}
-                    <td>
-                        {{ $m->unidad->nombre ?? '—' }}
-                    </td>
+                        {{-- ========================================================= --}}
+                        {{-- TIPO --}}
+                        {{-- ========================================================= --}}
 
-                    {{-- Concepto --}}
-                    <td>
-                        {{ $m->concepto->nombre ?? '—' }}
-                    </td>
+                        <td>
 
-                    {{-- Forma de pago --}}
-                    <td>
+                            @if($m->naturaleza == 1)
 
-                        @if($m->formaPago)
+                                <span class="badge badge-success">
 
-                            {{ $m->formaPago->nombre }}
+                                    Ingreso
 
-                        @else
+                                </span>
 
-                            —
+                            @else
 
-                        @endif
+                                <span class="badge badge-warning">
 
-                    </td>
+                                    Gasto
 
-                    {{-- Cuenta bancaria --}}
-                    <td>
-
-                        @if($m->cuentaBancaria)
-
-                            {{ $m->cuentaBancaria->nombre }}
-
-                            @if($m->cuentaBancaria->banco)
-
-                                <small class="text-muted d-block">
-                                    {{ $m->cuentaBancaria->banco->nombre }}
-                                </small>
+                                </span>
 
                             @endif
 
-                        @else
+                        </td>
 
-                            —
 
-                        @endif
+                        {{-- ========================================================= --}}
+                        {{-- INMOBILIARIA --}}
+                        {{-- ========================================================= --}}
 
-                    </td>
+                        <td>
 
-                    {{-- Importe --}}
-                    <td>
+                            {{ $m->inmobiliaria->nombre ?? '—' }}
 
-                        <strong>
-                            ${{ number_format($m->importe, 2) }}
-                        </strong>
+                        </td>
 
-                    </td>
 
-                    {{-- Estado --}}
-                    <td>
+                        {{-- ========================================================= --}}
+                        {{-- INMUEBLE --}}
+                        {{-- ========================================================= --}}
 
-                        @if($m->estado == 1)
+                        <td>
 
-                            <span class="badge badge-success">
-                                Vigente
-                            </span>
+                            {{ $m->inmueble->nombre ?? '—' }}
 
-                        @else
+                        </td>
 
-                            <span class="badge badge-danger">
-                                Cancelado
-                            </span>
 
-                        @endif
+                        {{-- ========================================================= --}}
+                        {{-- CLIENTE --}}
+                        {{-- ========================================================= --}}
 
-                    </td>
+                        <td>
 
-                </tr>
+                            @if($m->unidad && $m->unidad->cliente)
 
-            @empty
+                                <strong>
 
-                <tr>
+                                    {{ $m->unidad->cliente->nombre }}
 
-                    <td
-                        colspan="11"
-                        class="text-center"
-                    >
+                                </strong>
 
-                        No existen resultados.
 
-                    </td>
+                                @if($m->unidad->cliente->razon_social)
 
-                </tr>
+                                    <small class="text-muted d-block">
 
-            @endforelse
+                                        {{ $m->unidad->cliente->razon_social }}
+
+                                    </small>
+
+                                @endif
+
+                            @else
+
+                                <span class="text-muted">
+
+                                    Sin cliente asignado
+
+                                </span>
+
+                            @endif
+
+                        </td>
+
+
+                        {{-- ========================================================= --}}
+                        {{-- UNIDAD / LOCAL --}}
+                        {{-- ========================================================= --}}
+
+                        <td>
+
+                            @if($m->unidad)
+
+                                <span class="badge badge-info">
+
+                                    {{ $m->unidad->nombre }}
+
+                                </span>
+
+                            @else
+
+                                —
+
+                            @endif
+
+                        </td>
+
+
+                        {{-- ========================================================= --}}
+                        {{-- CONCEPTO --}}
+                        {{-- ========================================================= --}}
+
+                        <td>
+
+                            {{ $m->concepto->nombre ?? '—' }}
+
+                        </td>
+
+
+                        {{-- ========================================================= --}}
+                        {{-- FORMA DE PAGO --}}
+                        {{-- ========================================================= --}}
+
+                        <td>
+
+                            @if($m->formaPago)
+
+                                {{ $m->formaPago->nombre }}
+
+                            @else
+
+                                —
+
+                            @endif
+
+                        </td>
+
+
+                        {{-- ========================================================= --}}
+                        {{-- CUENTA BANCARIA --}}
+                        {{-- ========================================================= --}}
+
+                        <td>
+
+                            @if($m->cuentaBancaria)
+
+                                <strong>
+
+                                    {{ $m->cuentaBancaria->nombre }}
+
+                                </strong>
+
+
+                                @if($m->cuentaBancaria->banco)
+
+                                    <small class="text-muted d-block">
+
+                                        {{ $m->cuentaBancaria->banco->nombre }}
+
+                                    </small>
+
+                                @endif
+
+                            @else
+
+                                —
+
+                            @endif
+
+                        </td>
+
+
+                        {{-- ========================================================= --}}
+                        {{-- IMPORTE --}}
+                        {{-- ========================================================= --}}
+
+                        <td>
+
+                            <strong>
+
+                                ${{ number_format($m->importe, 2) }}
+
+                            </strong>
+
+                        </td>
+
+
+                        {{-- ========================================================= --}}
+                        {{-- ESTADO --}}
+                        {{-- ========================================================= --}}
+
+                        <td>
+
+                            @if($m->estado == 1)
+
+                                <span class="badge badge-success">
+
+                                    Vigente
+
+                                </span>
+
+                            @else
+
+                                <span class="badge badge-danger">
+
+                                    Cancelado
+
+                                </span>
+
+                            @endif
+
+                        </td>
+
+
+                    </tr>
+
+
+                @empty
+
+
+                    <tr>
+
+                        <td
+                            colspan="12"
+                            class="text-center text-muted"
+                        >
+
+                            <i class="fas fa-info-circle"></i>
+
+                            No existen resultados con los filtros seleccionados.
+
+                        </td>
+
+                    </tr>
+
+
+                @endforelse
+
 
             </tbody>
 
@@ -451,7 +754,10 @@
     </div>
 
 
-    {{-- Paginación --}}
+    {{-- ========================================================= --}}
+    {{-- PAGINACIÓN --}}
+    {{-- ========================================================= --}}
+
     <div class="card-footer">
 
         {{ $movimientos->appends(request()->query())->links() }}

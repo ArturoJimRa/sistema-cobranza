@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Reportes;
 
 use App\Http\Controllers\Controller;
+use App\Models\Cliente;
 use App\Models\Concepto;
 use App\Models\FormaPago;
 use App\Models\Inmobiliaria;
@@ -14,9 +15,16 @@ use Illuminate\Http\Request;
 
 class ReporteController extends Controller
 {
+    /*
+    |--------------------------------------------------------------------------
+    | VISTA PRINCIPAL DE REPORTES
+    |--------------------------------------------------------------------------
+    */
+
     public function index(Request $request)
     {
-        $movimientos = $this->filtrar($request)->paginate(20);
+        $movimientos = $this->filtrar($request)
+            ->paginate(20);
 
         return view('reportes.index', array_merge(
             $this->catalogos(),
@@ -24,36 +32,73 @@ class ReporteController extends Controller
         ));
     }
 
+
+    /*
+    |--------------------------------------------------------------------------
+    | EXPORTAR PDF
+    |--------------------------------------------------------------------------
+    */
+
     public function pdf(Request $request)
     {
-        $movimientos = $this->filtrar($request)->get();
+        $movimientos = $this->filtrar($request)
+            ->get();
 
-        $pdf = Pdf::loadView('reportes.pdf', compact('movimientos', 'request'))
-            ->setPaper('letter', 'landscape');
+        $pdf = Pdf::loadView(
+            'reportes.pdf',
+            compact('movimientos', 'request')
+        )
+        ->setPaper('letter', 'landscape');
 
         return $pdf->download('reporte-movimientos.pdf');
     }
 
+
+    /*
+    |--------------------------------------------------------------------------
+    | IMPRIMIR REPORTE
+    |--------------------------------------------------------------------------
+    */
+
     public function imprimir(Request $request)
     {
-        $movimientos = $this->filtrar($request)->get();
+        $movimientos = $this->filtrar($request)
+            ->get();
 
-        return view('reportes.imprimir', compact('movimientos', 'request'));
+        return view(
+            'reportes.imprimir',
+            compact('movimientos', 'request')
+        );
     }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | EXPORTAR EXCEL / CSV
+    |--------------------------------------------------------------------------
+    */
 
     public function excel(Request $request)
     {
-        $movimientos = $this->filtrar($request)->get();
+        $movimientos = $this->filtrar($request)
+            ->get();
 
         $filename = 'reporte-movimientos.csv';
 
         $headers = [
-            'Content-Type' => 'text/csv',
+            'Content-Type' => 'text/csv; charset=UTF-8',
             'Content-Disposition' => "attachment; filename=\"$filename\"",
         ];
 
         $callback = function () use ($movimientos) {
+
             $file = fopen('php://output', 'w');
+
+            /*
+            |--------------------------------------------------------------------------
+            | ENCABEZADOS
+            |--------------------------------------------------------------------------
+            */
 
             fputcsv($file, [
                 'Folio',
@@ -61,81 +106,310 @@ class ReporteController extends Controller
                 'Tipo',
                 'Inmobiliaria',
                 'Inmueble',
-                'Unidad',
+                'Unidad / Local',
+                'Cliente',
                 'Concepto',
-                'Forma Pago',
+                'Forma de Pago',
                 'Importe',
                 'Estado'
             ]);
 
+
+            /*
+            |--------------------------------------------------------------------------
+            | DATOS
+            |--------------------------------------------------------------------------
+            */
+
             foreach ($movimientos as $m) {
+
                 fputcsv($file, [
+
                     $m->folio,
+
                     $m->fecha,
-                    $m->naturaleza == 1 ? 'Ingreso' : 'Gasto',
+
+                    $m->naturaleza == 1
+                        ? 'Ingreso'
+                        : 'Gasto',
+
                     $m->inmobiliaria->nombre ?? '',
+
                     $m->inmueble->nombre ?? '',
+
                     $m->unidad->nombre ?? '',
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | CLIENTE
+                    |--------------------------------------------------------------------------
+                    */
+
+                    $m->unidad && $m->unidad->cliente
+                        ? $m->unidad->cliente->nombre
+                        : 'Sin cliente',
+
                     $m->concepto->nombre ?? '',
+
                     $m->formaPago->nombre ?? '',
+
                     $m->importe,
-                    $m->estado == 1 ? 'Vigente' : 'Cancelado'
+
+                    $m->estado == 1
+                        ? 'Vigente'
+                        : 'Cancelado'
+
                 ]);
             }
 
             fclose($file);
         };
 
-        return response()->stream($callback, 200, $headers);
+        return response()->stream(
+            $callback,
+            200,
+            $headers
+        );
     }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | FILTRAR MOVIMIENTOS
+    |--------------------------------------------------------------------------
+    */
 
     private function filtrar(Request $request)
     {
         return Movimiento::with([
+
             'inmobiliaria',
+
             'inmueble',
-            'unidad',
+
+            /*
+            |--------------------------------------------------------------------------
+            | UNIDAD Y CLIENTE
+            |--------------------------------------------------------------------------
+            */
+
+            'unidad.cliente',
+
             'concepto',
+
             'formaPago'
+
         ])
-        ->when($request->fecha_inicio, fn($q) =>
-            $q->whereDate('fecha', '>=', $request->fecha_inicio)
+
+        /*
+        |--------------------------------------------------------------------------
+        | FECHAS
+        |--------------------------------------------------------------------------
+        */
+
+        ->when(
+            $request->fecha_inicio,
+            fn($q) =>
+                $q->whereDate(
+                    'fecha',
+                    '>=',
+                    $request->fecha_inicio
+                )
         )
-        ->when($request->fecha_fin, fn($q) =>
-            $q->whereDate('fecha', '<=', $request->fecha_fin)
+
+        ->when(
+            $request->fecha_fin,
+            fn($q) =>
+                $q->whereDate(
+                    'fecha',
+                    '<=',
+                    $request->fecha_fin
+                )
         )
-        ->when($request->inmobiliaria_id, fn($q) =>
-            $q->where('inmobiliaria_id', $request->inmobiliaria_id)
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | INMOBILIARIA
+        |--------------------------------------------------------------------------
+        */
+
+        ->when(
+            $request->inmobiliaria_id,
+            fn($q) =>
+                $q->where(
+                    'inmobiliaria_id',
+                    $request->inmobiliaria_id
+                )
         )
-        ->when($request->inmueble_id, fn($q) =>
-            $q->where('inmueble_id', $request->inmueble_id)
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | INMUEBLE
+        |--------------------------------------------------------------------------
+        */
+
+        ->when(
+            $request->inmueble_id,
+            fn($q) =>
+                $q->where(
+                    'inmueble_id',
+                    $request->inmueble_id
+                )
         )
-        ->when($request->unidad_id, fn($q) =>
-            $q->where('unidad_id', $request->unidad_id)
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | UNIDAD / LOCAL
+        |--------------------------------------------------------------------------
+        */
+
+        ->when(
+            $request->unidad_id,
+            fn($q) =>
+                $q->where(
+                    'unidad_id',
+                    $request->unidad_id
+                )
         )
-        ->when($request->concepto_id, fn($q) =>
-            $q->where('concepto_id', $request->concepto_id)
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | CLIENTE
+        |--------------------------------------------------------------------------
+        */
+
+        ->when(
+            $request->cliente_id,
+            fn($q) =>
+                $q->whereHas('unidad', function ($query) use ($request) {
+
+                    $query->where(
+                        'cliente_id',
+                        $request->cliente_id
+                    );
+
+                })
         )
-        ->when($request->forma_pago_id, fn($q) =>
-            $q->where('forma_pago_id', $request->forma_pago_id)
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | CONCEPTO
+        |--------------------------------------------------------------------------
+        */
+
+        ->when(
+            $request->concepto_id,
+            fn($q) =>
+                $q->where(
+                    'concepto_id',
+                    $request->concepto_id
+                )
         )
-        ->when($request->naturaleza, fn($q) =>
-            $q->where('naturaleza', $request->naturaleza)
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | FORMA DE PAGO
+        |--------------------------------------------------------------------------
+        */
+
+        ->when(
+            $request->forma_pago_id,
+            fn($q) =>
+                $q->where(
+                    'forma_pago_id',
+                    $request->forma_pago_id
+                )
         )
-        ->when($request->estado, fn($q) =>
-            $q->where('estado', $request->estado)
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | NATURALEZA
+        |--------------------------------------------------------------------------
+        */
+
+        ->when(
+            $request->naturaleza,
+            fn($q) =>
+                $q->where(
+                    'naturaleza',
+                    $request->naturaleza
+                )
         )
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | ESTADO
+        |--------------------------------------------------------------------------
+        */
+
+        ->when(
+            $request->estado,
+            fn($q) =>
+                $q->where(
+                    'estado',
+                    $request->estado
+                )
+        )
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | ORDEN
+        |--------------------------------------------------------------------------
+        */
+
         ->orderBy('fecha', 'desc');
     }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | CATÁLOGOS PARA FILTROS
+    |--------------------------------------------------------------------------
+    */
 
     private function catalogos()
     {
         return [
-            'inmobiliarias' => Inmobiliaria::where('estado', 1)->orderBy('nombre')->get(),
-            'inmuebles' => Inmueble::where('estado', 1)->orderBy('nombre')->get(),
-            'unidades' => Unidad::where('estado', 1)->orderBy('nombre')->get(),
-            'conceptos' => Concepto::where('estado', 1)->orderBy('nombre')->get(),
-            'formasPago' => FormaPago::where('estado', 1)->orderBy('nombre')->get(),
+
+            'inmobiliarias' => Inmobiliaria::where('estado', 1)
+                ->orderBy('nombre')
+                ->get(),
+
+            'inmuebles' => Inmueble::where('estado', 1)
+                ->orderBy('nombre')
+                ->get(),
+
+            'unidades' => Unidad::where('estado', 1)
+                ->orderBy('nombre')
+                ->get(),
+
+            /*
+            |--------------------------------------------------------------------------
+            | CLIENTES
+            |--------------------------------------------------------------------------
+            */
+
+            'clientes' => Cliente::where('estado', 1)
+                ->orderBy('nombre')
+                ->get(),
+
+            'conceptos' => Concepto::where('estado', 1)
+                ->orderBy('nombre')
+                ->get(),
+
+            'formasPago' => FormaPago::where('estado', 1)
+                ->orderBy('nombre')
+                ->get(),
+
         ];
     }
 }
