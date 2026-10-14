@@ -37,7 +37,7 @@
             </h1>
 
             <small class="text-muted">
-                Administración de clientes y locales asignados
+                Administración de clientes, saldos y locales asignados
             </small>
         </div>
 
@@ -68,9 +68,8 @@
                         <th>Cliente</th>
                         <th>Razón social</th>
                         <th>RFC</th>
-                        <th>Teléfono</th>
-                        <th>Correo</th>
                         <th class="text-center">Locales</th>
+                        <th class="text-right">Saldo actual</th>
                         <th class="text-center">Estado</th>
                         <th class="text-center" style="width: 180px;">Acciones</th>
                     </tr>
@@ -79,6 +78,10 @@
                 <tbody>
 
                     @forelse($clientes as $cliente)
+
+                        @php
+                            $saldoActual = (float) $cliente->saldoActual();
+                        @endphp
 
                         <tr>
 
@@ -90,6 +93,15 @@
                                 <strong>
                                     {{ $cliente->nombre }}
                                 </strong>
+
+                                @if($cliente->correo)
+
+                                    <div class="small text-muted">
+                                        {{ $cliente->correo }}
+                                    </div>
+
+                                @endif
+
                             </td>
 
                             <td>
@@ -100,19 +112,35 @@
                                 {{ $cliente->rfc ?: '—' }}
                             </td>
 
-                            <td>
-                                {{ $cliente->telefono ?: '—' }}
-                            </td>
-
-                            <td>
-                                {{ $cliente->correo ?: '—' }}
-                            </td>
-
                             <td class="text-center">
 
                                 <span class="badge badge-info">
                                     {{ $cliente->unidades->count() }}
                                 </span>
+
+                            </td>
+
+                            <td class="text-right">
+
+                                @if($saldoActual > 0)
+
+                                    <span class="badge badge-danger">
+                                        Debe ${{ number_format($saldoActual, 2) }}
+                                    </span>
+
+                                @elseif($saldoActual < 0)
+
+                                    <span class="badge badge-primary">
+                                        A favor ${{ number_format(abs($saldoActual), 2) }}
+                                    </span>
+
+                                @else
+
+                                    <span class="badge badge-success">
+                                        Liquidado
+                                    </span>
+
+                                @endif
 
                             </td>
 
@@ -184,7 +212,7 @@
 
                         <tr>
 
-                            <td colspan="9" class="text-center py-4">
+                            <td colspan="8" class="text-center py-4">
 
                                 <i class="fas fa-users fa-2x text-muted mb-2"></i>
 

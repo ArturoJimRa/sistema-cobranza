@@ -169,7 +169,47 @@
 
                     </div>
 
-                    <div class="col-md-4 mb-3">
+                    {{-- Saldo inicial --}}
+                    <div class="col-md-6 mb-3">
+
+                        <label for="saldo_inicial">
+                            Saldo inicial
+                        </label>
+
+                        <div class="input-group">
+
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">
+                                    $
+                                </span>
+                            </div>
+
+                            <input
+                                type="number"
+                                step="0.01"
+                                name="saldo_inicial"
+                                id="saldo_inicial"
+                                class="form-control @error('saldo_inicial') is-invalid @enderror"
+                                value="{{ old('saldo_inicial', '0.00') }}"
+                                placeholder="0.00"
+                            >
+
+                            @error('saldo_inicial')
+                                <div class="invalid-feedback">
+                                    {{ $message }}
+                                </div>
+                            @enderror
+
+                        </div>
+
+                        <small class="form-text text-muted">
+                            Positivo = saldo a cargo del cliente.
+                            Negativo = saldo a favor del cliente.
+                        </small>
+
+                    </div>
+
+                    <div class="col-md-6 mb-3">
 
                         <label>
                             Estado

@@ -15,7 +15,14 @@ class ClienteController extends Controller
      */
     public function index()
     {
-        $clientes = Cliente::with('unidades')
+        $clientes = Cliente::with([
+                'unidades.inmueble',
+                'movimientos' => function ($query) {
+                    $query
+                        ->where('naturaleza', 1)
+                        ->where('estado', 1);
+                }
+            ])
             ->orderBy('nombre')
             ->paginate(10);
 
@@ -48,12 +55,29 @@ class ClienteController extends Controller
             'telefono' => 'nullable|string|max:30',
             'correo' => 'nullable|email|max:255',
             'direccion' => 'nullable|string|max:500',
+
+            /*
+             * Saldo inicial del cliente.
+             *
+             * Positivo = debe
+             * Negativo = saldo a favor
+             */
+            'saldo_inicial' => [
+                'nullable',
+                'numeric',
+                'max:9999999999.99',
+                'min:-9999999999.99',
+            ],
+
             'estado' => 'nullable|boolean',
+
             'unidades' => 'nullable|array',
             'unidades.*' => 'integer|exists:unidades,id',
         ]);
 
         DB::transaction(function () use ($validated) {
+
+            $saldoInicial = $validated['saldo_inicial'] ?? 0;
 
             $cliente = Cliente::create([
                 'nombre' => $validated['nombre'],
@@ -62,6 +86,19 @@ class ClienteController extends Controller
                 'telefono' => $validated['telefono'] ?? null,
                 'correo' => $validated['correo'] ?? null,
                 'direccion' => $validated['direccion'] ?? null,
+
+                /*
+                 * Saldo con el que entra el cliente.
+                 */
+                'saldo_inicial' => $saldoInicial,
+
+                /*
+                 * Estos valores se conservarán
+                 * para compatibilidad con la estructura actual.
+                 */
+                'saldo_favor' => 0,
+                'saldo_vencido' => 0,
+
                 'estado' => $validated['estado'] ?? true,
             ]);
 
@@ -89,7 +126,19 @@ class ClienteController extends Controller
     public function show(Cliente $cliente)
     {
         $cliente->load([
-            'unidades.inmueble'
+            'unidades.inmueble',
+            'movimientos' => function ($query) {
+                $query
+                    ->where('naturaleza', 1)
+                    ->where('estado', 1)
+                    ->with([
+                        'unidad',
+                        'concepto',
+                        'formaPago'
+                    ])
+                    ->orderByDesc('fecha')
+                    ->orderByDesc('id');
+            }
         ]);
 
         return view('clientes.show', compact('cliente'));
@@ -136,7 +185,20 @@ class ClienteController extends Controller
             'telefono' => 'nullable|string|max:30',
             'correo' => 'nullable|email|max:255',
             'direccion' => 'nullable|string|max:500',
+
+            /*
+             * Permitimos modificar manualmente
+             * el saldo inicial.
+             */
+            'saldo_inicial' => [
+                'nullable',
+                'numeric',
+                'max:9999999999.99',
+                'min:-9999999999.99',
+            ],
+
             'estado' => 'nullable|boolean',
+
             'unidades' => 'nullable|array',
             'unidades.*' => 'integer|exists:unidades,id',
         ]);
@@ -150,11 +212,22 @@ class ClienteController extends Controller
                 'telefono' => $validated['telefono'] ?? null,
                 'correo' => $validated['correo'] ?? null,
                 'direccion' => $validated['direccion'] ?? null,
+
+                /*
+                 * Saldo inicial del cliente.
+                 */
+                'saldo_inicial' => $validated['saldo_inicial'] ?? 0,
+
+                /*
+                 * No modificamos saldo_favor ni saldo_vencido.
+                 * Estos serán determinados por el sistema.
+                 */
+
                 'estado' => $validated['estado'] ?? false,
             ]);
 
             /*
-             * Primero quitamos las asignaciones actuales
+             * Quitamos las asignaciones actuales
              * de este cliente.
              */
             Unidad::where('cliente_id', $cliente->id)
@@ -163,7 +236,7 @@ class ClienteController extends Controller
                 ]);
 
             /*
-             * Después asignamos los nuevos locales.
+             * Asignamos los nuevos locales seleccionados.
              */
             if (!empty($validated['unidades'])) {
 
@@ -187,7 +260,7 @@ class ClienteController extends Controller
     {
         /*
          * No eliminamos físicamente el cliente.
-         * Lo desactivamos para conservar el historial.
+         * Lo desactivamos para conservar su historial.
          */
         DB::transaction(function () use ($cliente) {
 
@@ -197,7 +270,7 @@ class ClienteController extends Controller
 
             /*
              * Los locales dejan de estar asignados
-             * a este cliente.
+             * al cliente.
              */
             Unidad::where('cliente_id', $cliente->id)
                 ->update([

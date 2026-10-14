@@ -85,29 +85,71 @@ class MovimientoController extends Controller
     public function storeIngreso(IngresoRequest $request)
     {
         $movimiento = DB::transaction(function () use ($request) {
+
             $inmueble = Inmueble::where('estado', 1)
                 ->where('inmobiliaria_id', $request->inmobiliaria_id)
                 ->findOrFail($request->inmueble_id);
 
+            /*
+             * Si el ingreso pertenece a un local,
+             * obtenemos automáticamente el cliente
+             * asignado a ese local.
+             */
+            $clienteId = null;
+
+            if ($request->filled('unidad_id')) {
+
+                $unidad = Unidad::where('estado', 1)
+                    ->where('inmueble_id', $request->inmueble_id)
+                    ->whereNotNull('cliente_id')
+                    ->findOrFail($request->unidad_id);
+
+                $clienteId = $unidad->cliente_id;
+            }
+
             $movimiento = Movimiento::create([
                 'folio' => $this->generarFolio(),
+
                 'fecha' => $request->fecha,
+
+                // 1 = Ingreso
                 'naturaleza' => 1,
+
+                /*
+                 * Cliente dueño del local.
+                 */
+                'cliente_id' => $clienteId,
+
                 'inmobiliaria_id' => $request->inmobiliaria_id,
+
                 'tipo_inmueble_id' => $inmueble->tipo_inmueble_id,
+
                 'inmueble_id' => $inmueble->id,
+
                 'unidad_id' => $request->filled('unidad_id')
                     ? $request->unidad_id
                     : null,
+
                 'concepto_id' => $request->concepto_id,
+
                 'forma_pago_id' => $request->forma_pago_id,
+
                 'cuenta_bancaria_id' => $request->filled('cuenta_bancaria_id')
                     ? $request->cuenta_bancaria_id
                     : null,
+
                 'importe' => $request->importe,
-                'referencia' => $this->textoMayusculas($request->referencia),
-                'observaciones' => $this->textoMayusculas($request->observaciones),
+
+                'referencia' => $this->textoMayusculas(
+                    $request->referencia
+                ),
+
+                'observaciones' => $this->textoMayusculas(
+                    $request->observaciones
+                ),
+
                 'usuario_id' => Auth::id(),
+
                 'estado' => 1,
             ]);
 
@@ -155,6 +197,7 @@ class MovimientoController extends Controller
     public function storeGasto(GastoRequest $request)
     {
         $movimiento = DB::transaction(function () use ($request) {
+
             $inmueble = Inmueble::where('estado', 1)
                 ->where('inmobiliaria_id', $request->inmobiliaria_id)
                 ->findOrFail($request->inmueble_id);
@@ -162,20 +205,43 @@ class MovimientoController extends Controller
             $movimiento = Movimiento::create([
                 'folio' => $this->generarFolio(),
                 'fecha' => $request->fecha,
+
+                // 2 = Gasto
                 'naturaleza' => 2,
+
+                /*
+                 * Los gastos no pertenecen a un cliente.
+                 */
+                'cliente_id' => null,
+
                 'inmobiliaria_id' => $request->inmobiliaria_id,
+
                 'tipo_inmueble_id' => $inmueble->tipo_inmueble_id,
+
                 'inmueble_id' => $inmueble->id,
+
                 'unidad_id' => null,
+
                 'concepto_id' => $request->concepto_id,
+
                 'forma_pago_id' => $request->forma_pago_id,
+
                 'cuenta_bancaria_id' => $request->filled('cuenta_bancaria_id')
                     ? $request->cuenta_bancaria_id
                     : null,
+
                 'importe' => $request->importe,
-                'referencia' => $this->textoMayusculas($request->referencia),
-                'observaciones' => $this->textoMayusculas($request->observaciones),
+
+                'referencia' => $this->textoMayusculas(
+                    $request->referencia
+                ),
+
+                'observaciones' => $this->textoMayusculas(
+                    $request->observaciones
+                ),
+
                 'usuario_id' => Auth::id(),
+
                 'estado' => 1,
             ]);
 
@@ -202,7 +268,10 @@ class MovimientoController extends Controller
         if ($movimiento->estado == 2) {
             return redirect()
                 ->route('movimientos.index')
-                ->with('error', 'No se puede editar un movimiento cancelado.');
+                ->with(
+                    'error',
+                    'No se puede editar un movimiento cancelado.'
+                );
         }
 
         $inmobiliarias = Inmobiliaria::where('estado', 1)
@@ -255,25 +324,61 @@ class MovimientoController extends Controller
         }
 
         DB::transaction(function () use ($request, $movimiento) {
-            $inmueble = Inmueble::findOrFail($request->inmueble_id);
+
+            $inmueble = Inmueble::findOrFail(
+                $request->inmueble_id
+            );
+
+            /*
+             * Si el movimiento tiene un local,
+             * actualizamos también el cliente asociado.
+             */
+            $clienteId = null;
+
+            if ($request->filled('unidad_id')) {
+
+                $unidad = Unidad::where('estado', 1)
+                    ->where('inmueble_id', $request->inmueble_id)
+                    ->whereNotNull('cliente_id')
+                    ->findOrFail($request->unidad_id);
+
+                $clienteId = $unidad->cliente_id;
+            }
 
             $movimiento->update([
                 'fecha' => $request->fecha,
+
                 'naturaleza' => $request->naturaleza,
+
+                'cliente_id' => $clienteId,
+
                 'inmobiliaria_id' => $request->inmobiliaria_id,
+
                 'tipo_inmueble_id' => $inmueble->tipo_inmueble_id,
+
                 'inmueble_id' => $inmueble->id,
+
                 'unidad_id' => $request->filled('unidad_id')
                     ? $request->unidad_id
                     : null,
+
                 'concepto_id' => $request->concepto_id,
+
                 'forma_pago_id' => $request->forma_pago_id,
+
                 'cuenta_bancaria_id' => $request->filled('cuenta_bancaria_id')
                     ? $request->cuenta_bancaria_id
                     : null,
+
                 'importe' => $request->importe,
-                'referencia' => $this->textoMayusculas($request->referencia),
-                'observaciones' => $this->textoMayusculas($request->observaciones),
+
+                'referencia' => $this->textoMayusculas(
+                    $request->referencia
+                ),
+
+                'observaciones' => $this->textoMayusculas(
+                    $request->observaciones
+                ),
             ]);
 
             BitacoraMovimiento::create([
@@ -286,7 +391,10 @@ class MovimientoController extends Controller
 
         return redirect()
             ->route('movimientos.index')
-            ->with('success', 'Movimiento actualizado correctamente.');
+            ->with(
+                'success',
+                'Movimiento actualizado correctamente.'
+            );
     }
 
     public function destroy(Movimiento $movimiento)
@@ -299,6 +407,7 @@ class MovimientoController extends Controller
         }
 
         DB::transaction(function () use ($movimiento) {
+
             $movimiento->update([
                 'estado' => 2,
                 'cancelado_en' => now(),
@@ -333,7 +442,12 @@ class MovimientoController extends Controller
         return 'MOV-'
             . now()->format('Y')
             . '-'
-            . str_pad((string) $numero, 6, '0', STR_PAD_LEFT);
+            . str_pad(
+                (string) $numero,
+                6,
+                '0',
+                STR_PAD_LEFT
+            );
     }
 
     private function textoMayusculas(?string $texto): ?string

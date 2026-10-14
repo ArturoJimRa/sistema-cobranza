@@ -255,6 +255,7 @@
                                 value="{{ $cliente->id }}"
                                 {{ request('cliente_id') == $cliente->id ? 'selected' : '' }}
                             >
+
                                 {{ $cliente->nombre }}
 
                                 @if($cliente->razon_social)
@@ -423,6 +424,210 @@
 </div>
 
 
+
+{{-- ========================================================= --}}
+{{-- RESUMEN FINANCIERO DEL CLIENTE --}}
+{{-- ========================================================= --}}
+
+@if($clienteSeleccionado)
+
+    @php
+
+        $saldoInicial = (float) $clienteSeleccionado->saldo_inicial;
+
+        $totalPagos = (float) $clienteSeleccionado->totalPagos();
+
+        $saldoActual = (float) $clienteSeleccionado->saldoActual();
+
+        $saldoACargo = (float) $clienteSeleccionado->saldoACargo();
+
+        $saldoAFavor = (float) $clienteSeleccionado->saldoAFavorCalculado();
+
+    @endphp
+
+
+    <div class="card">
+
+        <div class="card-header">
+
+            <h3 class="card-title">
+
+                <i class="fas fa-user"></i>
+
+                Resumen financiero del cliente
+
+            </h3>
+
+        </div>
+
+
+        <div class="card-body">
+
+            <div class="row">
+
+                {{-- ========================================================= --}}
+                {{-- CLIENTE --}}
+                {{-- ========================================================= --}}
+
+                <div class="col-md-12 mb-3">
+
+                    <h4 class="mb-0">
+
+                        {{ $clienteSeleccionado->nombre }}
+
+                    </h4>
+
+                    @if($clienteSeleccionado->razon_social)
+
+                        <small class="text-muted">
+
+                            {{ $clienteSeleccionado->razon_social }}
+
+                        </small>
+
+                    @endif
+
+                </div>
+
+
+                {{-- ========================================================= --}}
+                {{-- SALDO INICIAL --}}
+                {{-- ========================================================= --}}
+
+                <div class="col-md-3">
+
+                    <div class="small text-muted">
+                        Saldo inicial
+                    </div>
+
+                    <h4>
+
+                        ${{ number_format($saldoInicial, 2) }}
+
+                    </h4>
+
+                </div>
+
+
+                {{-- ========================================================= --}}
+                {{-- TOTAL PAGOS --}}
+                {{-- ========================================================= --}}
+
+                <div class="col-md-3">
+
+                    <div class="small text-muted">
+                        Total pagos
+                    </div>
+
+                    <h4 class="text-success">
+
+                        ${{ number_format($totalPagos, 2) }}
+
+                    </h4>
+
+                </div>
+
+
+                {{-- ========================================================= --}}
+                {{-- SALDO A CARGO --}}
+                {{-- ========================================================= --}}
+
+                <div class="col-md-3">
+
+                    <div class="small text-muted">
+                        Saldo a cargo
+                    </div>
+
+                    <h4 class="text-danger">
+
+                        ${{ number_format($saldoACargo, 2) }}
+
+                    </h4>
+
+                </div>
+
+
+                {{-- ========================================================= --}}
+                {{-- SALDO A FAVOR --}}
+                {{-- ========================================================= --}}
+
+                <div class="col-md-3">
+
+                    <div class="small text-muted">
+                        Saldo a favor
+                    </div>
+
+                    <h4 class="text-info">
+
+                        ${{ number_format($saldoAFavor, 2) }}
+
+                    </h4>
+
+                </div>
+
+            </div>
+
+
+            <hr>
+
+
+            {{-- ========================================================= --}}
+            {{-- SALDO ACTUAL --}}
+            {{-- ========================================================= --}}
+
+            <div class="row">
+
+                <div class="col-md-12">
+
+                    <div class="d-flex justify-content-between align-items-center">
+
+                        <strong>
+                            Saldo actual
+                        </strong>
+
+
+                        @if($saldoActual > 0)
+
+                            <span class="badge badge-danger p-2">
+
+                                Saldo a cargo:
+                                ${{ number_format($saldoActual, 2) }}
+
+                            </span>
+
+                        @elseif($saldoActual < 0)
+
+                            <span class="badge badge-info p-2">
+
+                                Saldo a favor:
+                                ${{ number_format(abs($saldoActual), 2) }}
+
+                            </span>
+
+                        @else
+
+                            <span class="badge badge-success p-2">
+
+                                Cuenta al corriente
+
+                            </span>
+
+                        @endif
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+@endif
+
+
+
 {{-- ========================================================= --}}
 {{-- RESULTADOS --}}
 {{-- ========================================================= --}}
@@ -561,20 +766,20 @@
 
                         <td>
 
-                            @if($m->unidad && $m->unidad->cliente)
+                            @if($m->cliente)
 
                                 <strong>
 
-                                    {{ $m->unidad->cliente->nombre }}
+                                    {{ $m->cliente->nombre }}
 
                                 </strong>
 
 
-                                @if($m->unidad->cliente->razon_social)
+                                @if($m->cliente->razon_social)
 
                                     <small class="text-muted d-block">
 
-                                        {{ $m->unidad->cliente->razon_social }}
+                                        {{ $m->cliente->razon_social }}
 
                                     </small>
 

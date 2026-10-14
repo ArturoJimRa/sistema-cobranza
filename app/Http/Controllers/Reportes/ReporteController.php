@@ -26,9 +26,19 @@ class ReporteController extends Controller
         $movimientos = $this->filtrar($request)
             ->paginate(20);
 
+        $clienteSeleccionado = null;
+
+        if ($request->cliente_id) {
+
+            $clienteSeleccionado = Cliente::find($request->cliente_id);
+        }
+
         return view('reportes.index', array_merge(
             $this->catalogos(),
-            compact('movimientos')
+            compact(
+                'movimientos',
+                'clienteSeleccionado'
+            )
         ));
     }
 
@@ -44,9 +54,20 @@ class ReporteController extends Controller
         $movimientos = $this->filtrar($request)
             ->get();
 
+        $clienteSeleccionado = null;
+
+        if ($request->cliente_id) {
+
+            $clienteSeleccionado = Cliente::find($request->cliente_id);
+        }
+
         $pdf = Pdf::loadView(
             'reportes.pdf',
-            compact('movimientos', 'request')
+            compact(
+                'movimientos',
+                'request',
+                'clienteSeleccionado'
+            )
         )
         ->setPaper('letter', 'landscape');
 
@@ -65,9 +86,20 @@ class ReporteController extends Controller
         $movimientos = $this->filtrar($request)
             ->get();
 
+        $clienteSeleccionado = null;
+
+        if ($request->cliente_id) {
+
+            $clienteSeleccionado = Cliente::find($request->cliente_id);
+        }
+
         return view(
             'reportes.imprimir',
-            compact('movimientos', 'request')
+            compact(
+                'movimientos',
+                'request',
+                'clienteSeleccionado'
+            )
         );
     }
 
@@ -83,6 +115,13 @@ class ReporteController extends Controller
         $movimientos = $this->filtrar($request)
             ->get();
 
+        $clienteSeleccionado = null;
+
+        if ($request->cliente_id) {
+
+            $clienteSeleccionado = Cliente::find($request->cliente_id);
+        }
+
         $filename = 'reporte-movimientos.csv';
 
         $headers = [
@@ -90,9 +129,79 @@ class ReporteController extends Controller
             'Content-Disposition' => "attachment; filename=\"$filename\"",
         ];
 
-        $callback = function () use ($movimientos) {
+        $callback = function () use (
+            $movimientos,
+            $clienteSeleccionado
+        ) {
 
             $file = fopen('php://output', 'w');
+
+            /*
+            |--------------------------------------------------------------------------
+            | RESUMEN DEL CLIENTE
+            |--------------------------------------------------------------------------
+            */
+
+            if ($clienteSeleccionado) {
+
+                fputcsv($file, [
+                    'Cliente',
+                    $clienteSeleccionado->nombre
+                ]);
+
+                fputcsv($file, [
+                    'Saldo inicial',
+                    number_format(
+                        $clienteSeleccionado->saldo_inicial,
+                        2,
+                        '.',
+                        ''
+                    )
+                ]);
+
+                fputcsv($file, [
+                    'Total pagos',
+                    number_format(
+                        $clienteSeleccionado->totalPagos(),
+                        2,
+                        '.',
+                        ''
+                    )
+                ]);
+
+                fputcsv($file, [
+                    'Saldo actual',
+                    number_format(
+                        $clienteSeleccionado->saldoActual(),
+                        2,
+                        '.',
+                        ''
+                    )
+                ]);
+
+                fputcsv($file, [
+                    'Saldo a cargo',
+                    number_format(
+                        $clienteSeleccionado->saldoACargo(),
+                        2,
+                        '.',
+                        ''
+                    )
+                ]);
+
+                fputcsv($file, [
+                    'Saldo a favor',
+                    number_format(
+                        $clienteSeleccionado->saldoAFavorCalculado(),
+                        2,
+                        '.',
+                        ''
+                    )
+                ]);
+
+                fputcsv($file, []);
+            }
+
 
             /*
             |--------------------------------------------------------------------------
@@ -139,15 +248,7 @@ class ReporteController extends Controller
 
                     $m->unidad->nombre ?? '',
 
-                    /*
-                    |--------------------------------------------------------------------------
-                    | CLIENTE
-                    |--------------------------------------------------------------------------
-                    */
-
-                    $m->unidad && $m->unidad->cliente
-                        ? $m->unidad->cliente->nombre
-                        : 'Sin cliente',
+                    $m->cliente->nombre ?? 'Sin cliente',
 
                     $m->concepto->nombre ?? '',
 
@@ -183,21 +284,19 @@ class ReporteController extends Controller
     {
         return Movimiento::with([
 
+            'cliente',
+
             'inmobiliaria',
 
             'inmueble',
 
-            /*
-            |--------------------------------------------------------------------------
-            | UNIDAD Y CLIENTE
-            |--------------------------------------------------------------------------
-            */
-
-            'unidad.cliente',
+            'unidad',
 
             'concepto',
 
-            'formaPago'
+            'formaPago',
+
+            'cuentaBancaria.banco'
 
         ])
 
@@ -285,14 +384,10 @@ class ReporteController extends Controller
         ->when(
             $request->cliente_id,
             fn($q) =>
-                $q->whereHas('unidad', function ($query) use ($request) {
-
-                    $query->where(
-                        'cliente_id',
-                        $request->cliente_id
-                    );
-
-                })
+                $q->where(
+                    'cliente_id',
+                    $request->cliente_id
+                )
         )
 
 
@@ -391,12 +486,6 @@ class ReporteController extends Controller
             'unidades' => Unidad::where('estado', 1)
                 ->orderBy('nombre')
                 ->get(),
-
-            /*
-            |--------------------------------------------------------------------------
-            | CLIENTES
-            |--------------------------------------------------------------------------
-            */
 
             'clientes' => Cliente::where('estado', 1)
                 ->orderBy('nombre')

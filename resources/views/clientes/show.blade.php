@@ -15,7 +15,7 @@
             </h1>
 
             <small class="text-muted">
-                Información general y locales asignados
+                Información general, saldo y locales asignados
             </small>
         </div>
 
@@ -135,7 +135,7 @@
 
                 </div>
 
-                <div class="col-md-12">
+                <div class="col-md-12 mb-3">
 
                     <strong>
                         Dirección
@@ -146,6 +146,118 @@
                     </div>
 
                 </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    {{-- Resumen financiero --}}
+    @php
+        $saldoInicial = (float) $cliente->saldo_inicial;
+        $totalPagos = (float) $cliente->totalPagos();
+        $saldoActual = (float) $cliente->saldoActual();
+        $saldoACargo = (float) $cliente->saldoACargo();
+        $saldoAFavor = (float) $cliente->saldoAFavorCalculado();
+    @endphp
+
+    <div class="card">
+
+        <div class="card-header">
+
+            <h3 class="card-title">
+                <i class="fas fa-dollar-sign mr-1"></i>
+                Resumen financiero
+            </h3>
+
+        </div>
+
+        <div class="card-body">
+
+            <div class="row">
+
+                {{-- Saldo inicial --}}
+                <div class="col-md-3 mb-3">
+
+                    <div class="small text-muted">
+                        Saldo inicial
+                    </div>
+
+                    <h4 class="mb-0">
+                        ${{ number_format($saldoInicial, 2) }}
+                    </h4>
+
+                </div>
+
+                {{-- Pagos --}}
+                <div class="col-md-3 mb-3">
+
+                    <div class="small text-muted">
+                        Total de pagos
+                    </div>
+
+                    <h4 class="mb-0 text-success">
+                        ${{ number_format($totalPagos, 2) }}
+                    </h4>
+
+                </div>
+
+                {{-- Saldo a cargo --}}
+                <div class="col-md-3 mb-3">
+
+                    <div class="small text-muted">
+                        Saldo a cargo
+                    </div>
+
+                    <h4 class="mb-0 text-danger">
+                        ${{ number_format($saldoACargo, 2) }}
+                    </h4>
+
+                </div>
+
+                {{-- Saldo a favor --}}
+                <div class="col-md-3 mb-3">
+
+                    <div class="small text-muted">
+                        Saldo a favor
+                    </div>
+
+                    <h4 class="mb-0 text-primary">
+                        ${{ number_format($saldoAFavor, 2) }}
+                    </h4>
+
+                </div>
+
+            </div>
+
+            <hr>
+
+            <div class="text-center">
+
+                <span class="text-muted">
+                    Saldo actual:
+                </span>
+
+                @if($saldoActual > 0)
+
+                    <span class="badge badge-danger ml-1">
+                        Debe ${{ number_format($saldoActual, 2) }}
+                    </span>
+
+                @elseif($saldoActual < 0)
+
+                    <span class="badge badge-primary ml-1">
+                        Saldo a favor ${{ number_format(abs($saldoActual), 2) }}
+                    </span>
+
+                @else
+
+                    <span class="badge badge-success ml-1">
+                        Saldo liquidado
+                    </span>
+
+                @endif
 
             </div>
 
