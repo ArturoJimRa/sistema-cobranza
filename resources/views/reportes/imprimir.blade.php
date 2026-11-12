@@ -81,9 +81,18 @@
 
         <h5>Reporte de Movimientos</h5>
 
+@php
+    $fi = request('fecha_inicio') ?: $movimientos->min('fecha');
+    $ff = request('fecha_fin') ?: $movimientos->max('fecha');
+    $fmt = fn ($f) => $f ? \Carbon\Carbon::parse($f)->format('d/m/Y') : null;
+@endphp
         <p class="mb-0">
-            Fecha de generación:
-            {{ now()->format('d/m/Y H:i') }}
+            <strong>Periodo:</strong>
+            @if($fmt($fi))
+                del {{ $fmt($fi) }} al {{ $fmt($ff) }}
+            @else
+                Sin movimientos
+            @endif
         </p>
 
     </div>

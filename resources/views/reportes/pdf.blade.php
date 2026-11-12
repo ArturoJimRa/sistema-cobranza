@@ -122,11 +122,20 @@
 
     <div class="info">
 
+@php
+    $fi = request('fecha_inicio') ?: $movimientos->min('fecha');
+    $ff = request('fecha_fin') ?: $movimientos->max('fecha');
+    $fmt = fn ($f) => $f ? \Carbon\Carbon::parse($f)->format('d/m/Y') : null;
+@endphp
         <strong>
-            Fecha de generación:
+            Periodo:
         </strong>
 
-        {{ now()->format('d/m/Y H:i') }}
+        @if($fmt($fi))
+            del {{ $fmt($fi) }} al {{ $fmt($ff) }}
+        @else
+            Sin movimientos
+        @endif
 
     </div>
 
