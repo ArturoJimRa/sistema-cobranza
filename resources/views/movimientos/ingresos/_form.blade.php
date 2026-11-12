@@ -243,6 +243,23 @@
     </div>
 
     <div class="col-md-12 mb-3">
+        <div class="custom-control custom-switch">
+            <input type="hidden" name="facturado" value="0">
+            <input
+                type="checkbox"
+                class="custom-control-input"
+                id="facturado"
+                name="facturado"
+                value="1"
+                {{ old('facturado') ? 'checked' : '' }}>
+            <label class="custom-control-label" for="facturado">
+                <strong>Facturado</strong>
+                <small class="text-muted">(se exporta en el archivo VENTAF de Microsip; si no se marca, va en VENTANF)</small>
+            </label>
+        </div>
+    </div>
+
+    <div class="col-md-12 mb-3">
         <label for="observaciones">
             Observaciones
         </label>

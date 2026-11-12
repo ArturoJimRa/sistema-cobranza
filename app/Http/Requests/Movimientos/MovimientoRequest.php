@@ -21,6 +21,7 @@ class MovimientoRequest extends FormRequest
             'forma_pago_id' => 'required|exists:formas_pago,id',
             'cuenta_bancaria_id' => 'nullable|exists:cuentas_bancarias,id',
             'importe' => 'required|numeric|min:0.01',
+            'facturado' => 'nullable|boolean',
             'referencia' => 'nullable|max:150',
             'observaciones' => 'nullable',
         ];

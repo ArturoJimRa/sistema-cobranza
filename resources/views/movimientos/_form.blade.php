@@ -131,6 +131,23 @@
     </div>
 
     <div class="col-md-12 mb-3">
+        <div class="custom-control custom-switch">
+            <input type="hidden" name="facturado" value="0">
+            <input
+                type="checkbox"
+                class="custom-control-input"
+                id="facturado"
+                name="facturado"
+                value="1"
+                {{ old('facturado', $movimiento->facturado ?? false) ? 'checked' : '' }}>
+            <label class="custom-control-label" for="facturado">
+                <strong>Facturado</strong>
+                <small class="text-muted">(solo aplica a ingresos; VENTAF si está marcado, VENTANF si no)</small>
+            </label>
+        </div>
+    </div>
+
+    <div class="col-md-12 mb-3">
         <label>Observaciones</label>
         <textarea name="observaciones" rows="3" class="form-control">{{ old('observaciones', $movimiento->observaciones ?? '') }}</textarea>
     </div>

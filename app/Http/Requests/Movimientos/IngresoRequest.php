@@ -70,6 +70,8 @@ class IngresoRequest extends FormRequest
                 'max:9999999999.99',
             ],
 
+            'facturado' => ['nullable', 'boolean'],
+
             'referencia' => [
                 'nullable',
                 'string',

@@ -36,6 +36,7 @@ class ConceptoController extends Controller
         Concepto::create([
             'tipo' => $request->tipo,
             'nombre' => strtoupper($request->nombre),
+            'clave_microsip' => $request->filled('clave_microsip') ? strtoupper(trim($request->clave_microsip)) : null,
             'estado' => 1,
         ]);
 
@@ -54,6 +55,7 @@ class ConceptoController extends Controller
         $concepto->update([
             'tipo' => $request->tipo,
             'nombre' => strtoupper($request->nombre),
+            'clave_microsip' => $request->filled('clave_microsip') ? strtoupper(trim($request->clave_microsip)) : null,
         ]);
 
         return redirect()

@@ -18,7 +18,7 @@
         @enderror
     </div>
 
-    <div class="col-md-8 mb-3">
+    <div class="col-md-5 mb-3">
         <label>Nombre <span class="text-danger">*</span></label>
 
         <input
@@ -28,6 +28,24 @@
             value="{{ old('nombre', $concepto->nombre ?? '') }}">
 
         @error('nombre')
+            <div class="invalid-feedback">{{ $message }}</div>
+        @enderror
+    </div>
+
+    <div class="col-md-3 mb-3">
+        <label>Clave Microsip</label>
+
+        <input
+            type="text"
+            name="clave_microsip"
+            maxlength="20"
+            class="form-control @error('clave_microsip') is-invalid @enderror"
+            value="{{ old('clave_microsip', $concepto->clave_microsip ?? '') }}"
+            placeholder="Ej. 5, IT01">
+
+        <small class="form-text text-muted">Si se deja vacía, se usa el ID.</small>
+
+        @error('clave_microsip')
             <div class="invalid-feedback">{{ $message }}</div>
         @enderror
     </div>

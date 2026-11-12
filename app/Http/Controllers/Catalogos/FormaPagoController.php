@@ -31,6 +31,7 @@ class FormaPagoController extends Controller
     {
         FormaPago::create([
             'nombre' => strtoupper($request->nombre),
+            'clave_microsip' => $request->filled('clave_microsip') ? strtoupper(trim($request->clave_microsip)) : null,
             'estado' => 1,
         ]);
 
@@ -50,6 +51,7 @@ class FormaPagoController extends Controller
     {
         $formas_pago->update([
             'nombre' => strtoupper($request->nombre),
+            'clave_microsip' => $request->filled('clave_microsip') ? strtoupper(trim($request->clave_microsip)) : null,
         ]);
 
         return redirect()

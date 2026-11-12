@@ -16,6 +16,7 @@ class ConceptoRequest extends FormRequest
         return [
             'tipo' => 'required|in:1,2',
             'nombre' => 'required|max:150',
+            'clave_microsip' => 'nullable|max:20',
         ];
     }
 

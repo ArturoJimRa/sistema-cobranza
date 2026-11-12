@@ -76,6 +76,9 @@
                     <td>
                         @if($movimiento->naturaleza == 1)
                             <span class="badge badge-success">Ingreso</span>
+                            @if($movimiento->facturado)
+                                <span class="badge badge-info" title="Se exporta en VENTAF">Facturado</span>
+                            @endif
                         @else
                             <span class="badge badge-danger">Gasto</span>
                         @endif

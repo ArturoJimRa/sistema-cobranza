@@ -14,6 +14,7 @@ class Concepto extends Model
     protected $fillable = [
         'tipo',
         'nombre',
+        'clave_microsip',
         'estado'
     ];
 

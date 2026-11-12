@@ -15,6 +15,7 @@ class FormaPagoRequest extends FormRequest
     {
         return [
             'nombre' => 'required|max:100',
+            'clave_microsip' => 'nullable|max:20',
         ];
     }
 

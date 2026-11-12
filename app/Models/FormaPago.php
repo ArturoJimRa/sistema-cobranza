@@ -13,6 +13,7 @@ class FormaPago extends Model
 
     protected $fillable = [
         'nombre',
+        'clave_microsip',
         'estado'
     ];
 

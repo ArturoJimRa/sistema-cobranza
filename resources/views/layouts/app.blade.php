@@ -287,6 +287,20 @@
 
                     </li>
 
+                    @if(auth()->user()?->esAdministrador())
+                    <li class="nav-item">
+
+                        <a href="{{ route('microsip.index') }}" class="nav-link">
+
+                            <i class="nav-icon fas fa-file-export"></i>
+
+                            <p>Exportar a Microsip</p>
+
+                        </a>
+
+                    </li>
+                    @endif
+
                 </ul>
 
             </nav>

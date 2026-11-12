@@ -25,12 +25,17 @@ class Movimiento extends Model
         'forma_pago_id',
         'cuenta_bancaria_id',
         'importe',
+        'facturado',
         'referencia',
         'observaciones',
         'usuario_id',
         'estado',
         'cancelado_en',
         'cancelado_por',
+    ];
+
+    protected $casts = [
+        'facturado' => 'boolean',
     ];
 
     public function cliente(): BelongsTo

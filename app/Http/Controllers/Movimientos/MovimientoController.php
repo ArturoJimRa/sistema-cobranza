@@ -140,6 +140,9 @@ class MovimientoController extends Controller
 
                 'importe' => $request->importe,
 
+                // Facturado (VENTAF) o no facturado (VENTANF) en Microsip
+                'facturado' => $request->boolean('facturado'),
+
                 'referencia' => $this->textoMayusculas(
                     $request->referencia
                 ),
@@ -231,6 +234,9 @@ class MovimientoController extends Controller
                     : null,
 
                 'importe' => $request->importe,
+
+                // Los gastos no se exportan a Microsip
+                'facturado' => false,
 
                 'referencia' => $this->textoMayusculas(
                     $request->referencia
@@ -371,6 +377,9 @@ class MovimientoController extends Controller
                     : null,
 
                 'importe' => $request->importe,
+
+                // Solo los ingresos pueden marcarse como facturados
+                'facturado' => $request->naturaleza == 1 && $request->boolean('facturado'),
 
                 'referencia' => $this->textoMayusculas(
                     $request->referencia
