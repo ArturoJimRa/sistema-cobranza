@@ -1,0 +1,68 @@
+services:
+  cobranza-db:
+    image: mysql:8.4
+    container_name: sistema-cobranza-db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE:?Falta MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER:?Falta MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?Falta MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Falta MYSQL_ROOT_PASSWORD}
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    volumes:
+      - cobranza_db_data:/var/lib/mysql
+    networks:
+      - cobranza_net
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u root -p\"$${MYSQL_ROOT_PASSWORD}\" --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
+  cobranza-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: sistema-cobranza-app:latest
+    container_name: sistema-cobranza-app
+    restart: unless-stopped
+    depends_on:
+      cobranza-db:
+        condition: service_healthy
+    environment:
+      APP_NAME: ${APP_NAME}
+      APP_ENV: ${APP_ENV}
+      APP_KEY: ${APP_KEY}
+      APP_DEBUG: ${APP_DEBUG}
+      APP_URL: ${APP_URL}
+      LOG_CHANNEL: ${LOG_CHANNEL}
+      LOG_LEVEL: ${LOG_LEVEL}
+      DB_CONNECTION: ${DB_CONNECTION}
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_DATABASE: ${DB_DATABASE}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      SESSION_DRIVER: ${SESSION_DRIVER}
+      SESSION_LIFETIME: ${SESSION_LIFETIME}
+      SESSION_ENCRYPT: ${SESSION_ENCRYPT}
+      SESSION_SECURE_COOKIE: ${SESSION_SECURE_COOKIE}
+      CACHE_STORE: ${CACHE_STORE}
+      QUEUE_CONNECTION: ${QUEUE_CONNECTION}
+      FILESYSTEM_DISK: ${FILESYSTEM_DISK}
+    ports:
+      - "8083:80"
+    networks:
+      - cobranza_net
+
+networks:
+  cobranza_net:
+    name: sistema-cobranza-net
+    driver: bridge
+
+volumes:
+  cobranza_db_data:
+    name: sistema-cobranza-db-data
