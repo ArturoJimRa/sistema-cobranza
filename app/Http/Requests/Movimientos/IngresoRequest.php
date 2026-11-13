@@ -13,33 +13,66 @@ class IngresoRequest extends FormRequest
         return true;
     }
 
+    /**
+     * El select de cliente trae la opción "sin" (ingreso general sin cliente).
+     */
+    protected function prepareForValidation(): void
+    {
+        $sinCliente = $this->input('cliente_id') === 'sin';
+
+        $this->merge([
+            'origen' => $sinCliente ? 'general' : 'cliente',
+            'cliente_id' => $sinCliente ? null : $this->input('cliente_id'),
+        ]);
+    }
+
     public function rules(): array
     {
-        return [
+        $porCliente = $this->input('origen') === 'cliente';
+
+        $ubicacion = $porCliente
+            ? [
+                // Pago de un cliente: uno de sus locales dentro de la inmobiliaria
+                'cliente_id' => [
+                    'required',
+                    Rule::exists('clientes', 'id')->where(
+                        fn ($query) => $query->where('estado', 1)
+                    ),
+                ],
+
+                'unidad_id' => [
+                    'required',
+                    Rule::exists('unidades', 'id')->where(
+                        fn ($query) => $query
+                            ->where('cliente_id', $this->cliente_id)
+                            ->where('estado', 1)
+                            ->whereIn('inmueble_id', fn ($sub) => $sub
+                                ->select('id')
+                                ->from('inmuebles')
+                                ->where('inmobiliaria_id', $this->inmobiliaria_id))
+                    ),
+                ],
+            ]
+            : [
+                // Ingreso general, sin cliente: se elige el inmueble
+                'inmueble_id' => [
+                    'required',
+                    Rule::exists('inmuebles', 'id')->where(
+                        fn ($query) => $query
+                            ->where('inmobiliaria_id', $this->inmobiliaria_id)
+                            ->where('estado', 1)
+                    ),
+                ],
+            ];
+
+        return $ubicacion + [
+            'origen' => ['required', Rule::in(['cliente', 'general'])],
+
             'fecha' => ['required', 'date'],
 
             'inmobiliaria_id' => [
                 'required',
                 'exists:inmobiliarias,id',
-            ],
-
-            'inmueble_id' => [
-                'required',
-                Rule::exists('inmuebles', 'id')->where(
-                    fn ($query) => $query
-                        ->where('inmobiliaria_id', $this->inmobiliaria_id)
-                        ->where('estado', 1)
-                ),
-            ],
-
-            'unidad_id' => [
-                'nullable',
-                Rule::exists('unidades', 'id')->where(
-                    fn ($query) => $query
-                        ->where('inmueble_id', $this->inmueble_id)
-                        ->where('estado', 1)
-                        ->whereNotNull('cliente_id')
-                ),
             ],
 
             'concepto_id' => [
@@ -122,8 +155,14 @@ class IngresoRequest extends FormRequest
             'inmueble_id.exists' =>
                 'El inmueble no pertenece a la inmobiliaria seleccionada.',
 
+            'cliente_id.required' => 'Seleccione el cliente que realizó el pago.',
+
+            'cliente_id.exists' => 'Seleccione un cliente activo.',
+
+            'unidad_id.required' => 'Seleccione el local al que corresponde el pago.',
+
             'unidad_id.exists' =>
-                'El local seleccionado no pertenece al inmueble o no tiene un cliente asignado.',
+                'El local seleccionado no es del cliente o no está en la inmobiliaria elegida.',
 
             'concepto_id.required' =>
                 'Seleccione el concepto del ingreso.',

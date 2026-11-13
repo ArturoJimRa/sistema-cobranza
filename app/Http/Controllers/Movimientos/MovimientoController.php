@@ -7,6 +7,7 @@ use App\Http\Requests\Movimientos\GastoRequest;
 use App\Http\Requests\Movimientos\IngresoRequest;
 use App\Http\Requests\Movimientos\MovimientoRequest;
 use App\Models\BitacoraMovimiento;
+use App\Models\Cliente;
 use App\Models\Concepto;
 use App\Models\CuentaBancaria;
 use App\Models\FormaPago;
@@ -66,6 +67,18 @@ class MovimientoController extends Controller
                 ->orderBy('nombre')
                 ->get(),
 
+            /*
+             * Clientes activos con al menos un local activo,
+             * con sus locales, inmueble e inmobiliaria.
+             */
+            'clientes' => Cliente::where('estado', 1)
+                ->whereHas('unidades', fn ($q) => $q->where('estado', 1))
+                ->with(['unidades' => fn ($q) => $q->where('estado', 1)
+                    ->orderBy('nombre')
+                    ->with('inmueble.inmobiliaria')])
+                ->orderBy('nombre')
+                ->get(),
+
             'conceptos' => Concepto::where('estado', 1)
                 ->where('tipo', 1)
                 ->orderBy('nombre')
@@ -86,25 +99,32 @@ class MovimientoController extends Controller
     {
         $movimiento = DB::transaction(function () use ($request) {
 
-            $inmueble = Inmueble::where('estado', 1)
-                ->where('inmobiliaria_id', $request->inmobiliaria_id)
-                ->findOrFail($request->inmueble_id);
-
-            /*
-             * Si el ingreso pertenece a un local,
-             * obtenemos automáticamente el cliente
-             * asignado a ese local.
-             */
             $clienteId = null;
+            $unidadId = null;
 
-            if ($request->filled('unidad_id')) {
+            if ($request->input('origen', 'cliente') === 'cliente') {
 
-                $unidad = Unidad::where('estado', 1)
-                    ->where('inmueble_id', $request->inmueble_id)
-                    ->whereNotNull('cliente_id')
+                /*
+                 * Ingreso de cliente: el local elegido debe ser del cliente.
+                 * Inmueble e inmobiliaria se toman del propio local.
+                 */
+                $unidad = Unidad::with('inmueble')
+                    ->where('estado', 1)
+                    ->where('cliente_id', $request->cliente_id)
                     ->findOrFail($request->unidad_id);
 
+                $inmueble = $unidad->inmueble;
                 $clienteId = $unidad->cliente_id;
+                $unidadId = $unidad->id;
+
+            } else {
+
+                /*
+                 * Ingreso general del inmueble, sin cliente.
+                 */
+                $inmueble = Inmueble::where('estado', 1)
+                    ->where('inmobiliaria_id', $request->inmobiliaria_id)
+                    ->findOrFail($request->inmueble_id);
             }
 
             $movimiento = Movimiento::create([
@@ -120,15 +140,13 @@ class MovimientoController extends Controller
                  */
                 'cliente_id' => $clienteId,
 
-                'inmobiliaria_id' => $request->inmobiliaria_id,
+                'inmobiliaria_id' => $inmueble->inmobiliaria_id,
 
                 'tipo_inmueble_id' => $inmueble->tipo_inmueble_id,
 
                 'inmueble_id' => $inmueble->id,
 
-                'unidad_id' => $request->filled('unidad_id')
-                    ? $request->unidad_id
-                    : null,
+                'unidad_id' => $unidadId,
 
                 'concepto_id' => $request->concepto_id,
 

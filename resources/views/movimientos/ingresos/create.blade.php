@@ -22,9 +22,10 @@
         <div class="card-body">
 
             <div class="alert alert-light border">
-                Capture los datos correspondientes al ingreso. El campo
-                <strong>Local</strong> aparecerá únicamente cuando el
-                inmueble seleccionado tenga unidades registradas.
+                Elija la <strong>inmobiliaria</strong>, el <strong>cliente</strong>
+                que realizó el pago y el <strong>local</strong> al que corresponde.
+                Si el ingreso no es de ningún cliente, elija
+                <em>Sin cliente (ingreso general)</em> y después el inmueble.
             </div>
 
             @include('movimientos.ingresos._form')
