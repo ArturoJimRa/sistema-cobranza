@@ -68,7 +68,7 @@
                         <th>Cliente</th>
                         <th>Razón social</th>
                         <th>RFC</th>
-                        <th class="text-center">Locales</th>
+                        <th style="min-width: 220px;">Locales asignados</th>
                         <th class="text-right">Saldo actual</th>
                         <th class="text-center">Estado</th>
                         <th class="text-center" style="width: 180px;">Acciones</th>
@@ -112,11 +112,17 @@
                                 {{ $cliente->rfc ?: '—' }}
                             </td>
 
-                            <td class="text-center">
+                            <td style="max-width: 320px;">
 
-                                <span class="badge badge-info">
-                                    {{ $cliente->unidades->count() }}
-                                </span>
+                                @forelse($cliente->unidades->sortBy(fn ($u) => $u->inmueble->nombre ?? '', SORT_NATURAL) as $unidad)
+                                    <span
+                                        class="badge {{ $unidad->estado ? 'badge-info' : 'badge-secondary' }} mb-1"
+                                        title="{{ $unidad->nombre }}{{ $unidad->estado ? '' : ' (inactivo)' }}">
+                                        {{ $unidad->inmueble->nombre ?? $unidad->nombre }}
+                                    </span>
+                                @empty
+                                    <small class="text-muted">Sin locales</small>
+                                @endforelse
 
                             </td>
 
