@@ -20,6 +20,6 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::resource('bancos', BancoController::class);
     Route::resource('cuentas-bancarias', CuentaBancariaController::class);
     Route::resource('inmuebles', InmuebleController::class);
-    Route::resource('unidades', UnidadController::class);
+    Route::resource('unidades', UnidadController::class)->parameters(['unidades' => 'unidad']);
     
 });
