@@ -15,7 +15,8 @@ class MovimientoRequest extends FormRequest
             'naturaleza' => 'required|in:1,2',
             'inmobiliaria_id' => 'required|exists:inmobiliarias,id',
             'tipo_inmueble_id' => 'nullable|exists:tipos_inmueble,id',
-            'inmueble_id' => 'required|exists:inmuebles,id',
+            'inmueble_id' => 'required_if:naturaleza,1|nullable|exists:inmuebles,id',
+            'cliente_id' => 'nullable|exists:clientes,id',
             'unidad_id' => 'nullable|exists:unidades,id',
             'concepto_id' => 'required|exists:conceptos,id',
             'forma_pago_id' => 'required|exists:formas_pago,id',
@@ -23,7 +24,8 @@ class MovimientoRequest extends FormRequest
             'importe' => 'required|numeric|min:0.01',
             'facturado' => 'nullable|boolean',
             'referencia' => 'nullable|max:150',
-            'observaciones' => 'nullable',
+            // Gasto asignado a un cliente: observación obligatoria
+            'observaciones' => ((int) $this->naturaleza === 2 && $this->filled('cliente_id')) ? 'required' : 'nullable',
         ];
     }
 }

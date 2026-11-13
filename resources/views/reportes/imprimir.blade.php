@@ -188,7 +188,7 @@
 
                         {{-- CLIENTE --}}
                         <td>
-                            {{ $m->unidad->cliente->nombre ?? 'Sin cliente' }}
+                            {{ $m->cliente->nombre ?? $m->unidad->cliente->nombre ?? 'Sin cliente' }}
                         </td>
 
 

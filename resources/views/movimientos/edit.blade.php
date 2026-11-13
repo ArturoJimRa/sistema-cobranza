@@ -36,5 +36,5 @@
 @endsection
 
 @push('scripts')
-<script src="{{ asset('js/movimientos.js') }}"></script>
+<script src="{{ asset('js/movimientos.js') }}?v={{ filemtime(public_path('js/movimientos.js')) }}"></script>
 @endpush

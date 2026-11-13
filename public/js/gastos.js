@@ -1,85 +1,55 @@
 document.addEventListener('DOMContentLoaded', () => {
     const inmobiliariaSelect = document.getElementById('inmobiliaria_id');
-    const inmuebleSelect = document.getElementById('inmueble_id');
+    const clienteSelect = document.getElementById('cliente_id');
+
+    const observaciones = document.getElementById('observaciones');
+    const obsRequerida = document.getElementById('obs_requerida');
 
     const formaPagoSelect = document.getElementById('forma_pago_id');
     const grupoCuenta = document.getElementById('grupo_cuenta_bancaria');
     const cuentaSelect = document.getElementById('cuenta_bancaria_id');
-
     const grupoReferencia = document.getElementById('grupo_referencia');
     const referenciaInput = document.getElementById('referencia');
 
-    const inmuebleSeleccionado = inmuebleSelect?.dataset.selected || '';
-
-    function limpiarSelect(select, texto) {
-        select.innerHTML = '';
-
-        const option = document.createElement('option');
-        option.value = '';
-        option.textContent = texto;
-
-        select.appendChild(option);
-    }
-
-    function agregarOpciones(select, registros, seleccionado = '') {
-        registros.forEach((registro) => {
-            const option = document.createElement('option');
-
-            option.value = registro.id;
-            option.textContent = registro.nombre;
-            option.selected = String(registro.id) === String(seleccionado);
-
-            select.appendChild(option);
-        });
-    }
-
-    async function cargarInmuebles(inmobiliariaId, seleccionado = '') {
-        limpiarSelect(inmuebleSelect, 'Cargando inmuebles...');
-
-        if (!inmobiliariaId) {
-            limpiarSelect(
-                inmuebleSelect,
-                'Seleccione primero una inmobiliaria...'
-            );
-
-            return;
-        }
-
+    function unidadesDe(option) {
         try {
-            const response = await fetch(
-                `/ajax/inmuebles/${inmobiliariaId}`,
-                {
-                    headers: {
-                        Accept: 'application/json',
-                    },
-                }
-            );
-
-            if (!response.ok) {
-                throw new Error(`Error HTTP ${response.status}`);
-            }
-
-            const inmuebles = await response.json();
-
-            limpiarSelect(inmuebleSelect, 'Seleccione un inmueble...');
-            agregarOpciones(inmuebleSelect, inmuebles, seleccionado);
-        } catch (error) {
-            console.error(error);
-
-            limpiarSelect(
-                inmuebleSelect,
-                'No fue posible cargar los inmuebles'
-            );
+            return JSON.parse(option?.dataset.unidades || '[]');
+        } catch (e) {
+            return [];
         }
     }
 
-    function controlarFormaPago() {
-        const texto = formaPagoSelect
-            ?.options[formaPagoSelect.selectedIndex]
-            ?.text
-            .trim()
-            .toLowerCase() || '';
+    /* ---------- Inmobiliaria -> solo clientes con locales en esa plaza ---------- */
+    function filtrarClientes() {
+        const inmo = inmobiliariaSelect.value;
 
+        [...clienteSelect.options].forEach((option) => {
+            if (option.value === '') return; // "Sin cliente" siempre disponible
+            const tiene = !!inmo && unidadesDe(option).some((u) => String(u.inmobiliaria_id) === String(inmo));
+            option.hidden = !tiene;
+            option.disabled = !tiene;
+        });
+
+        const actual = clienteSelect.options[clienteSelect.selectedIndex];
+        if (actual && actual.disabled) clienteSelect.value = '';
+    }
+
+    /* ---------- Con cliente: observación obligatoria ---------- */
+    function cambiarCliente() {
+        const conCliente = clienteSelect.value !== '';
+
+        observaciones.required = conCliente;
+        obsRequerida.style.display = conCliente ? '' : 'none';
+        observaciones.placeholder = conCliente
+            ? 'Explique por qué este gasto corresponde al cliente (obligatorio)'
+            : 'Información adicional del gasto';
+    }
+
+    /* ---------- Forma de pago ---------- */
+    function controlarFormaPago() {
+        if (!formaPagoSelect) return;
+
+        const texto = formaPagoSelect.options[formaPagoSelect.selectedIndex]?.text.trim().toLowerCase() || '';
         const esTransferencia = texto.includes('transferencia');
 
         grupoCuenta.style.display = esTransferencia ? 'block' : 'none';
@@ -91,18 +61,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    inmobiliariaSelect?.addEventListener('change', function () {
-        cargarInmuebles(this.value);
-    });
-
+    inmobiliariaSelect?.addEventListener('change', () => { filtrarClientes(); cambiarCliente(); });
+    clienteSelect?.addEventListener('change', cambiarCliente);
     formaPagoSelect?.addEventListener('change', controlarFormaPago);
 
-    if (inmobiliariaSelect?.value) {
-        cargarInmuebles(
-            inmobiliariaSelect.value,
-            inmuebleSeleccionado
-        );
-    }
-
+    filtrarClientes();
+    cambiarCliente();
     controlarFormaPago();
 });

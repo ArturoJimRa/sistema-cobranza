@@ -22,7 +22,9 @@
         <div class="card-body">
 
             <div class="alert alert-light border">
-                Capture los datos correspondientes al gasto realizado.
+                Los gastos se registran por <strong>inmobiliaria (plaza)</strong>. Si el gasto
+                corresponde a un <strong>cliente</strong>, elíjalo; en ese caso las
+                <strong>observaciones</strong> son obligatorias.
             </div>
 
             @include('movimientos.gastos._form')
@@ -53,5 +55,5 @@
 @endsection
 
 @push('scripts')
-<script src="{{ asset('js/gastos.js') }}"></script>
+<script src="{{ asset('js/gastos.js') }}?v={{ filemtime(public_path('js/gastos.js')) }}"></script>
 @endpush

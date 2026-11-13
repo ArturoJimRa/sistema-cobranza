@@ -49,22 +49,41 @@
     </div>
 
     <div class="col-md-6 mb-3">
-        <label for="inmueble_id">
-            Inmueble <span class="text-danger">*</span>
+        <label for="cliente_id">
+            Cliente <small class="text-muted">(opcional)</small>
         </label>
 
         <select
-            id="inmueble_id"
-            name="inmueble_id"
-            class="form-control @error('inmueble_id') is-invalid @enderror"
-            data-selected="{{ old('inmueble_id') }}"
-            required>
+            id="cliente_id"
+            name="cliente_id"
+            class="form-control @error('cliente_id') is-invalid @enderror">
 
-            <option value="">Seleccione primero una inmobiliaria...</option>
+            <option value="">— Sin cliente (gasto general de la plaza) —</option>
+
+            @foreach($clientes as $cliente)
+                <option
+                    value="{{ $cliente->id }}"
+                    data-unidades="{{ $cliente->unidades->map(fn ($u) => [
+                        'id' => $u->id,
+                        'nombre' => $u->nombre,
+                        'inmueble' => $u->inmueble->nombre ?? '',
+                        'inmobiliaria_id' => $u->inmueble->inmobiliaria_id ?? null,
+                    ])->values()->toJson() }}"
+                    {{ old('cliente_id') == $cliente->id ? 'selected' : '' }}>
+
+                    {{ $cliente->nombre }}
+
+                </option>
+            @endforeach
 
         </select>
 
-        @error('inmueble_id')
+        <small class="form-text text-muted">
+            Déjelo en «Sin cliente» si es un gasto general de la plaza.
+            Si es de un cliente, elíjalo (no afecta su saldo).
+        </small>
+
+        @error('cliente_id')
             <div class="invalid-feedback">{{ $message }}</div>
         @enderror
     </div>
@@ -217,6 +236,9 @@
     <div class="col-md-12 mb-3">
         <label for="observaciones">
             Observaciones
+            <span class="text-danger" id="obs_requerida" style="display: none;">
+                * <small>(obligatoria al asignar el gasto a un cliente)</small>
+            </span>
         </label>
 
         <textarea

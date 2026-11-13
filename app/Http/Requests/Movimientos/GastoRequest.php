@@ -15,6 +15,8 @@ class GastoRequest extends FormRequest
 
     public function rules(): array
     {
+        $conCliente = $this->filled('cliente_id');
+
         return [
             'fecha' => ['required', 'date'],
 
@@ -23,12 +25,11 @@ class GastoRequest extends FormRequest
                 'exists:inmobiliarias,id',
             ],
 
-            'inmueble_id' => [
-                'required',
-                Rule::exists('inmuebles', 'id')->where(
-                    fn ($query) => $query
-                        ->where('inmobiliaria_id', $this->inmobiliaria_id)
-                        ->where('estado', 1)
+            // Opcional: gasto de un cliente (si no, es general de la plaza)
+            'cliente_id' => [
+                'nullable',
+                Rule::exists('clientes', 'id')->where(
+                    fn ($query) => $query->where('estado', 1)
                 ),
             ],
 
@@ -66,8 +67,9 @@ class GastoRequest extends FormRequest
                 'max:150',
             ],
 
+            // Obligatorias cuando el gasto se asigna a un cliente
             'observaciones' => [
-                'nullable',
+                $conCliente ? 'required' : 'nullable',
                 'string',
                 'max:2000',
             ],
@@ -102,8 +104,8 @@ class GastoRequest extends FormRequest
         return [
             'fecha.required' => 'La fecha es obligatoria.',
             'inmobiliaria_id.required' => 'Seleccione una inmobiliaria.',
-            'inmueble_id.required' => 'Seleccione un inmueble.',
-            'inmueble_id.exists' => 'El inmueble no pertenece a la inmobiliaria seleccionada.',
+            'cliente_id.exists' => 'Seleccione un cliente activo.',
+            'observaciones.required' => 'Capture una observación: es obligatoria cuando el gasto se asigna a un cliente.',
             'concepto_id.required' => 'Seleccione el concepto del gasto.',
             'concepto_id.exists' => 'Seleccione un concepto de gasto válido.',
             'forma_pago_id.required' => 'Seleccione una forma de pago.',

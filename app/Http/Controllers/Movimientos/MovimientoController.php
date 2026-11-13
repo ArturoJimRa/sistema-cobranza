@@ -199,6 +199,13 @@ class MovimientoController extends Controller
                 ->orderBy('nombre')
                 ->get(),
 
+            // Clientes activos con sus locales (asignar el gasto a un cliente es opcional)
+            'clientes' => Cliente::where('estado', 1)
+                ->whereHas('unidades', fn ($q) => $q->where('estado', 1))
+                ->with(['unidades' => fn ($q) => $q->where('estado', 1)->with('inmueble')])
+                ->orderBy('nombre')
+                ->get(),
+
             'conceptos' => Concepto::where('estado', 1)
                 ->where('tipo', 2)
                 ->orderBy('nombre')
@@ -219,10 +226,6 @@ class MovimientoController extends Controller
     {
         $movimiento = DB::transaction(function () use ($request) {
 
-            $inmueble = Inmueble::where('estado', 1)
-                ->where('inmobiliaria_id', $request->inmobiliaria_id)
-                ->findOrFail($request->inmueble_id);
-
             $movimiento = Movimiento::create([
                 'folio' => $this->generarFolio(),
                 'fecha' => $request->fecha,
@@ -231,15 +234,19 @@ class MovimientoController extends Controller
                 'naturaleza' => 2,
 
                 /*
-                 * Los gastos no pertenecen a un cliente.
+                 * Gasto general de la plaza o, opcionalmente, de un cliente.
+                 * No afecta el saldo del cliente (el saldo solo considera ingresos).
                  */
-                'cliente_id' => null,
+                'cliente_id' => $request->filled('cliente_id')
+                    ? $request->cliente_id
+                    : null,
 
                 'inmobiliaria_id' => $request->inmobiliaria_id,
 
-                'tipo_inmueble_id' => $inmueble->tipo_inmueble_id,
+                // Los gastos son a nivel inmobiliaria: sin inmueble ni local
+                'tipo_inmueble_id' => null,
 
-                'inmueble_id' => $inmueble->id,
+                'inmueble_id' => null,
 
                 'unidad_id' => null,
 
@@ -325,8 +332,13 @@ class MovimientoController extends Controller
             ->orderBy('nombre')
             ->get();
 
+        $clientes = Cliente::where('estado', 1)
+            ->orderBy('nombre')
+            ->get();
+
         return view('movimientos.edit', compact(
             'movimiento',
+            'clientes',
             'inmobiliarias',
             'inmuebles',
             'unidades',
@@ -349,17 +361,22 @@ class MovimientoController extends Controller
 
         DB::transaction(function () use ($request, $movimiento) {
 
-            $inmueble = Inmueble::findOrFail(
-                $request->inmueble_id
-            );
+            $esGasto = (int) $request->naturaleza === 2;
 
             /*
-             * Si el movimiento tiene un local,
+             * Gasto: a nivel inmobiliaria, cliente opcional, sin inmueble ni local.
+             */
+            $inmueble = $esGasto ? null : Inmueble::findOrFail($request->inmueble_id);
+
+            /*
+             * Ingreso: si el movimiento tiene un local,
              * actualizamos también el cliente asociado.
              */
-            $clienteId = null;
+            $clienteId = $esGasto && $request->filled('cliente_id')
+                ? $request->cliente_id
+                : null;
 
-            if ($request->filled('unidad_id')) {
+            if (! $esGasto && $request->filled('unidad_id')) {
 
                 $unidad = Unidad::where('estado', 1)
                     ->where('inmueble_id', $request->inmueble_id)
@@ -378,11 +395,11 @@ class MovimientoController extends Controller
 
                 'inmobiliaria_id' => $request->inmobiliaria_id,
 
-                'tipo_inmueble_id' => $inmueble->tipo_inmueble_id,
+                'tipo_inmueble_id' => $inmueble?->tipo_inmueble_id,
 
-                'inmueble_id' => $inmueble->id,
+                'inmueble_id' => $inmueble?->id,
 
-                'unidad_id' => $request->filled('unidad_id')
+                'unidad_id' => ! $esGasto && $request->filled('unidad_id')
                     ? $request->unidad_id
                     : null,
 

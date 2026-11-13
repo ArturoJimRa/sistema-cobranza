@@ -56,5 +56,5 @@
 @endsection
 
 @push('scripts')
-<script src="{{ asset('js/ingresos.js') }}"></script>
+<script src="{{ asset('js/ingresos.js') }}?v={{ filemtime(public_path('js/ingresos.js')) }}"></script>
 @endpush

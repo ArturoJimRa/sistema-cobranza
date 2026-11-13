@@ -258,4 +258,26 @@ document.addEventListener('DOMContentLoaded', function () {
     );
 
     controlarFormaPago();
+
+    /* ---------- Gasto: sin inmueble ni local, cliente opcional ---------- */
+    const clienteSelect = document.getElementById('cliente_id');
+    const observaciones = document.getElementById('observaciones');
+    const obsRequerida = document.getElementById('obs_requerida');
+
+    function aplicarNaturaleza() {
+        const esGasto = naturalezaSelect?.value === '2';
+
+        document.querySelectorAll('.solo-ingreso').forEach((g) => { g.style.display = esGasto ? 'none' : ''; });
+        document.querySelectorAll('.solo-gasto').forEach((g) => { g.style.display = esGasto ? '' : 'none'; });
+
+        if (inmuebleSelect) inmuebleSelect.required = !esGasto;
+
+        const obsObligatoria = esGasto && !!clienteSelect?.value;
+        if (observaciones) observaciones.required = obsObligatoria;
+        if (obsRequerida) obsRequerida.style.display = obsObligatoria ? '' : 'none';
+    }
+
+    naturalezaSelect?.addEventListener('change', aplicarNaturaleza);
+    clienteSelect?.addEventListener('change', aplicarNaturaleza);
+    aplicarNaturaleza();
 });
