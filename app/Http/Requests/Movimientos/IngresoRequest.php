@@ -32,19 +32,14 @@ class IngresoRequest extends FormRequest
 
         $ubicacion = $porCliente
             ? [
-                // Pago de un cliente: uno de sus locales dentro de la inmobiliaria
+                // Pago de un cliente con al menos un local activo en la inmobiliaria
                 'cliente_id' => [
                     'required',
                     Rule::exists('clientes', 'id')->where(
                         fn ($query) => $query->where('estado', 1)
                     ),
-                ],
-
-                'unidad_id' => [
-                    'required',
-                    Rule::exists('unidades', 'id')->where(
+                    Rule::exists('unidades', 'cliente_id')->where(
                         fn ($query) => $query
-                            ->where('cliente_id', $this->cliente_id)
                             ->where('estado', 1)
                             ->whereIn('inmueble_id', fn ($sub) => $sub
                                 ->select('id')
@@ -53,17 +48,7 @@ class IngresoRequest extends FormRequest
                     ),
                 ],
             ]
-            : [
-                // Ingreso general, sin cliente: se elige el inmueble
-                'inmueble_id' => [
-                    'required',
-                    Rule::exists('inmuebles', 'id')->where(
-                        fn ($query) => $query
-                            ->where('inmobiliaria_id', $this->inmobiliaria_id)
-                            ->where('estado', 1)
-                    ),
-                ],
-            ];
+            : [];
 
         return $ubicacion + [
             'origen' => ['required', Rule::in(['cliente', 'general'])],
@@ -157,12 +142,7 @@ class IngresoRequest extends FormRequest
 
             'cliente_id.required' => 'Seleccione el cliente que realizó el pago.',
 
-            'cliente_id.exists' => 'Seleccione un cliente activo.',
-
-            'unidad_id.required' => 'Seleccione el local al que corresponde el pago.',
-
-            'unidad_id.exists' =>
-                'El local seleccionado no es del cliente o no está en la inmobiliaria elegida.',
+            'cliente_id.exists' => 'Seleccione un cliente activo con locales en la inmobiliaria elegida.',
 
             'concepto_id.required' =>
                 'Seleccione el concepto del ingreso.',

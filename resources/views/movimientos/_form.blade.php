@@ -31,38 +31,10 @@
         @error('inmobiliaria_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
     </div>
 
-    <div class="col-md-4 mb-3 solo-ingreso">
-        <label>Inmueble *</label>
-        <select id="inmueble_id" name="inmueble_id" class="form-control @error('inmueble_id') is-invalid @enderror">
-            <option value="">Seleccione...</option>
-            @foreach($inmuebles as $inmueble)
-                <option value="{{ $inmueble->id }}"
-                    {{ old('inmueble_id', $movimiento->inmueble_id ?? '') == $inmueble->id ? 'selected' : '' }}>
-                    {{ $inmueble->nombre }}
-                </option>
-            @endforeach
-        </select>
-        @error('inmueble_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
-    </div>
-
-    <div class="col-md-4 mb-3 solo-ingreso">
-        <label>Unidad *</label>
-        <select id="unidad_id" name="unidad_id" class="form-control @error('unidad_id') is-invalid @enderror">
-            <option value="">Seleccione...</option>
-            @foreach($unidades as $unidad)
-                <option value="{{ $unidad->id }}"
-                    {{ old('unidad_id', $movimiento->unidad_id ?? '') == $unidad->id ? 'selected' : '' }}>
-                    {{ $unidad->nombre }}
-                </option>
-            @endforeach
-        </select>
-        @error('unidad_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
-    </div>
-
-    <div class="col-md-8 mb-3 solo-gasto" style="display: none;">
+    <div class="col-md-12 mb-3">
         <label>Cliente <small class="text-muted">(opcional)</small></label>
         <select id="cliente_id" name="cliente_id" class="form-control @error('cliente_id') is-invalid @enderror">
-            <option value="">— Sin cliente (gasto general de la plaza) —</option>
+            <option value="">— Sin cliente (general de la plaza) —</option>
             @foreach($clientes as $cliente)
                 <option value="{{ $cliente->id }}"
                     {{ old('cliente_id', $movimiento->cliente_id ?? '') == $cliente->id ? 'selected' : '' }}>

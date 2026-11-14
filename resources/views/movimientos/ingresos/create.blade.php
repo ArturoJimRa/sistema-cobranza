@@ -22,10 +22,9 @@
         <div class="card-body">
 
             <div class="alert alert-light border">
-                Elija la <strong>inmobiliaria</strong>, el <strong>cliente</strong>
-                que realizó el pago y el <strong>local</strong> al que corresponde.
-                Si el ingreso no es de ningún cliente, elija
-                <em>Sin cliente (ingreso general)</em> y después el inmueble.
+                Elija la <strong>inmobiliaria</strong> y el <strong>cliente</strong>
+                que realizó el pago. Si el ingreso no es de ningún cliente, elija
+                <em>Sin cliente (ingreso general de la plaza)</em>.
             </div>
 
             @include('movimientos.ingresos._form')

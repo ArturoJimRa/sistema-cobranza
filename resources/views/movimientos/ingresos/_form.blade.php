@@ -48,7 +48,7 @@
         @enderror
     </div>
 
-    <div class="col-md-6 mb-3">
+    <div class="col-md-12 mb-3">
         <label for="cliente_id">
             Cliente <span class="text-danger">*</span>
         </label>
@@ -64,12 +64,7 @@
             @foreach($clientes as $cliente)
                 <option
                     value="{{ $cliente->id }}"
-                    data-unidades="{{ $cliente->unidades->map(fn ($u) => [
-                        'id' => $u->id,
-                        'nombre' => $u->nombre,
-                        'inmueble' => $u->inmueble->nombre ?? '',
-                        'inmobiliaria_id' => $u->inmueble->inmobiliaria_id ?? null,
-                    ])->values()->toJson() }}"
+                    data-inmobiliarias="{{ $cliente->unidades->pluck('inmueble.inmobiliaria_id')->filter()->unique()->values()->toJson() }}"
                     {{ old('cliente_id') == $cliente->id ? 'selected' : '' }}>
 
                     {{ $cliente->nombre }}
@@ -78,56 +73,16 @@
             @endforeach
 
             <option value="sin" {{ old('origen') === 'general' ? 'selected' : '' }}>
-                — Sin cliente (ingreso general) —
+                — Sin cliente (ingreso general de la plaza) —
             </option>
 
         </select>
 
+        <small class="form-text text-muted">
+            El pago se registra al cliente, aunque tenga varios locales.
+        </small>
+
         @error('cliente_id')
-            <div class="invalid-feedback">{{ $message }}</div>
-        @enderror
-    </div>
-
-    <div class="col-md-6 mb-3" id="grupo_unidad">
-        <label for="unidad_id">
-            Local <span class="text-danger">*</span>
-        </label>
-
-        <select
-            id="unidad_id"
-            name="unidad_id"
-            class="form-control @error('unidad_id') is-invalid @enderror"
-            data-selected="{{ old('unidad_id') }}">
-
-            <option value="">Seleccione primero un cliente...</option>
-
-        </select>
-
-        <small class="form-text text-muted" id="info_local">&nbsp;</small>
-
-        @error('unidad_id')
-            <div class="invalid-feedback">{{ $message }}</div>
-        @enderror
-    </div>
-
-    <div class="col-md-6 mb-3" id="grupo_inmueble" style="display: none;">
-        <label for="inmueble_id">
-            Inmueble <span class="text-danger">*</span>
-        </label>
-
-        <select
-            id="inmueble_id"
-            name="inmueble_id"
-            class="form-control @error('inmueble_id') is-invalid @enderror"
-            data-selected="{{ old('inmueble_id') }}">
-
-            <option value="">Seleccione un inmueble...</option>
-
-        </select>
-
-        <small class="form-text text-muted">Ingreso que no corresponde a ningún cliente.</small>
-
-        @error('inmueble_id')
             <div class="invalid-feedback">{{ $message }}</div>
         @enderror
     </div>

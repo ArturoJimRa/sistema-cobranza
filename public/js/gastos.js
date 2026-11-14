@@ -11,9 +11,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const grupoReferencia = document.getElementById('grupo_referencia');
     const referenciaInput = document.getElementById('referencia');
 
-    function unidadesDe(option) {
+    function inmobiliariasDe(option) {
         try {
-            return JSON.parse(option?.dataset.unidades || '[]');
+            return JSON.parse(option?.dataset.inmobiliarias || '[]').map(String);
         } catch (e) {
             return [];
         }
@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         [...clienteSelect.options].forEach((option) => {
             if (option.value === '') return; // "Sin cliente" siempre disponible
-            const tiene = !!inmo && unidadesDe(option).some((u) => String(u.inmobiliaria_id) === String(inmo));
+            const tiene = !!inmo && inmobiliariasDe(option).includes(String(inmo));
             option.hidden = !tiene;
             option.disabled = !tiene;
         });

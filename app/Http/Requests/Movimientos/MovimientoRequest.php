@@ -15,7 +15,7 @@ class MovimientoRequest extends FormRequest
             'naturaleza' => 'required|in:1,2',
             'inmobiliaria_id' => 'required|exists:inmobiliarias,id',
             'tipo_inmueble_id' => 'nullable|exists:tipos_inmueble,id',
-            'inmueble_id' => 'required_if:naturaleza,1|nullable|exists:inmuebles,id',
+            'inmueble_id' => 'nullable|exists:inmuebles,id',
             'cliente_id' => 'nullable|exists:clientes,id',
             'unidad_id' => 'nullable|exists:unidades,id',
             'concepto_id' => 'required|exists:conceptos,id',

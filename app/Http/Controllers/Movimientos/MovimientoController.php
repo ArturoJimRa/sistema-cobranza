@@ -73,9 +73,7 @@ class MovimientoController extends Controller
              */
             'clientes' => Cliente::where('estado', 1)
                 ->whereHas('unidades', fn ($q) => $q->where('estado', 1))
-                ->with(['unidades' => fn ($q) => $q->where('estado', 1)
-                    ->orderBy('nombre')
-                    ->with('inmueble.inmobiliaria')])
+                ->with(['unidades' => fn ($q) => $q->where('estado', 1)->with('inmueble')])
                 ->orderBy('nombre')
                 ->get(),
 
@@ -99,34 +97,6 @@ class MovimientoController extends Controller
     {
         $movimiento = DB::transaction(function () use ($request) {
 
-            $clienteId = null;
-            $unidadId = null;
-
-            if ($request->input('origen', 'cliente') === 'cliente') {
-
-                /*
-                 * Ingreso de cliente: el local elegido debe ser del cliente.
-                 * Inmueble e inmobiliaria se toman del propio local.
-                 */
-                $unidad = Unidad::with('inmueble')
-                    ->where('estado', 1)
-                    ->where('cliente_id', $request->cliente_id)
-                    ->findOrFail($request->unidad_id);
-
-                $inmueble = $unidad->inmueble;
-                $clienteId = $unidad->cliente_id;
-                $unidadId = $unidad->id;
-
-            } else {
-
-                /*
-                 * Ingreso general del inmueble, sin cliente.
-                 */
-                $inmueble = Inmueble::where('estado', 1)
-                    ->where('inmobiliaria_id', $request->inmobiliaria_id)
-                    ->findOrFail($request->inmueble_id);
-            }
-
             $movimiento = Movimiento::create([
                 'folio' => $this->generarFolio(),
 
@@ -138,15 +108,21 @@ class MovimientoController extends Controller
                 /*
                  * Cliente dueño del local.
                  */
-                'cliente_id' => $clienteId,
+                /*
+                 * El ingreso se registra al cliente (no por local):
+                 * un pago puede cubrir varios locales. Sin cliente = ingreso general de la plaza.
+                 */
+                'cliente_id' => $request->input('origen') === 'cliente'
+                    ? $request->cliente_id
+                    : null,
 
-                'inmobiliaria_id' => $inmueble->inmobiliaria_id,
+                'inmobiliaria_id' => $request->inmobiliaria_id,
 
-                'tipo_inmueble_id' => $inmueble->tipo_inmueble_id,
+                'tipo_inmueble_id' => null,
 
-                'inmueble_id' => $inmueble->id,
+                'inmueble_id' => null,
 
-                'unidad_id' => $unidadId,
+                'unidad_id' => null,
 
                 'concepto_id' => $request->concepto_id,
 
@@ -361,30 +337,15 @@ class MovimientoController extends Controller
 
         DB::transaction(function () use ($request, $movimiento) {
 
-            $esGasto = (int) $request->naturaleza === 2;
-
             /*
-             * Gasto: a nivel inmobiliaria, cliente opcional, sin inmueble ni local.
+             * Ingresos y gastos se registran por inmobiliaria y cliente (opcional),
+             * ya no por inmueble/local. Si cambia el cliente, se limpian el
+             * inmueble y el local que pudiera traer un registro antiguo.
              */
-            $inmueble = $esGasto ? null : Inmueble::findOrFail($request->inmueble_id);
+            $clienteId = $request->filled('cliente_id') ? (int) $request->cliente_id : null;
 
-            /*
-             * Ingreso: si el movimiento tiene un local,
-             * actualizamos también el cliente asociado.
-             */
-            $clienteId = $esGasto && $request->filled('cliente_id')
-                ? $request->cliente_id
-                : null;
-
-            if (! $esGasto && $request->filled('unidad_id')) {
-
-                $unidad = Unidad::where('estado', 1)
-                    ->where('inmueble_id', $request->inmueble_id)
-                    ->whereNotNull('cliente_id')
-                    ->findOrFail($request->unidad_id);
-
-                $clienteId = $unidad->cliente_id;
-            }
+            $mismoCliente = $clienteId === ($movimiento->cliente_id ? (int) $movimiento->cliente_id : null)
+                && (int) $request->inmobiliaria_id === (int) $movimiento->inmobiliaria_id;
 
             $movimiento->update([
                 'fecha' => $request->fecha,
@@ -395,13 +356,11 @@ class MovimientoController extends Controller
 
                 'inmobiliaria_id' => $request->inmobiliaria_id,
 
-                'tipo_inmueble_id' => $inmueble?->tipo_inmueble_id,
+                'tipo_inmueble_id' => $mismoCliente ? $movimiento->tipo_inmueble_id : null,
 
-                'inmueble_id' => $inmueble?->id,
+                'inmueble_id' => $mismoCliente ? $movimiento->inmueble_id : null,
 
-                'unidad_id' => ! $esGasto && $request->filled('unidad_id')
-                    ? $request->unidad_id
-                    : null,
+                'unidad_id' => $mismoCliente ? $movimiento->unidad_id : null,
 
                 'concepto_id' => $request->concepto_id,
 

@@ -63,12 +63,7 @@
             @foreach($clientes as $cliente)
                 <option
                     value="{{ $cliente->id }}"
-                    data-unidades="{{ $cliente->unidades->map(fn ($u) => [
-                        'id' => $u->id,
-                        'nombre' => $u->nombre,
-                        'inmueble' => $u->inmueble->nombre ?? '',
-                        'inmobiliaria_id' => $u->inmueble->inmobiliaria_id ?? null,
-                    ])->values()->toJson() }}"
+                    data-inmobiliarias="{{ $cliente->unidades->pluck('inmueble.inmobiliaria_id')->filter()->unique()->values()->toJson() }}"
                     {{ old('cliente_id') == $cliente->id ? 'selected' : '' }}>
 
                     {{ $cliente->nombre }}
